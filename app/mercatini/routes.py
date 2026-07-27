@@ -219,7 +219,7 @@ def ai_estrai():
         f"Anno corrente: {_anno}. Se manca l'anno usa {_anno}. "
         "Se la data e' passata ma l'evento e' futuro usa l'anno successivo.\n"
         "- regione: nome completo (es. Lombardia). provincia: sigla 2 lettere (es. MI).\n"
-        "- Max 12 eventi nell'array."
+        "- Max 8 eventi. Descrizione: max 80 caratteri, solo info essenziali."
     )
 
     content = []
@@ -231,14 +231,25 @@ def ai_estrai():
         model = current_app.config.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
         client = _ant.Anthropic(api_key=api_key)
         resp = client.messages.create(
-            model=model, max_tokens=2048, system=SYSTEM,
+            model=model, max_tokens=4096, system=SYSTEM,
             messages=[{'role': 'user', 'content': content}]
         )
         raw = resp.content[0].text.strip()
         if raw.startswith('```'):
             raw = raw.split('```')[1]
             if raw.startswith('json'): raw = raw[4:]
-        dati = _json.loads(raw.strip())
+        raw = raw.strip()
+        try:
+            dati = _json.loads(raw)
+        except _json.JSONDecodeError:
+            for close in ['"}}]}', '"}]}', '"]}', ']}', ']', '}}']:
+                try:
+                    dati = _json.loads(raw + close)
+                    break
+                except Exception:
+                    continue
+            else:
+                raise
         # Normalize: accept both {"eventi":[...]} and legacy single-object
         if 'eventi' in dati:
             eventi = dati['eventi']
@@ -301,7 +312,18 @@ def ai_estrai():
         if raw.startswith('```'):
             raw = raw.split('```')[1]
             if raw.startswith('json'): raw = raw[4:]
-        dati = _json.loads(raw.strip())
+        raw = raw.strip()
+        try:
+            dati = _json.loads(raw)
+        except _json.JSONDecodeError:
+            for close in ['"}}]}', '"}]}', '"]}', ']}', ']', '}}']:
+                try:
+                    dati = _json.loads(raw + close)
+                    break
+                except Exception:
+                    continue
+            else:
+                raise
         return jsonify({'ok': True, 'dati': dati})
     except (_ant.APIError, _json.JSONDecodeError, Exception) as e:
         return jsonify({'error': str(e)}), 502
