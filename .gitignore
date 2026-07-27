@@ -4,6 +4,5 @@ __pycache__/
 .env
 instance/
 *.sqlite
-migrations/versions/*.py
 *.sock
 *.log
