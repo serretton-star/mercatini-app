@@ -1,53 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ titolo_pagina }}
-<script>
-function toggleAI(){
-  var b=document.getElementById('ai-body'),c=document.getElementById('ai-chv');
-  b.classList.toggle('hidden'); c.classList.toggle('rotate-180');
-}
-function aiLabel(){
-  var f=document.getElementById('ai-img').files[0];
-  document.getElementById('ai-lbl').textContent=f?f.name:'Seleziona immagine';
-}
-function b64(file){return new Promise(function(r,j){var rd=new FileReader();rd.onload=function(){r(rd.result.split(',')[1]);};rd.onerror=j;rd.readAsDataURL(file);});}
-async function estraiDati(){
-  var txt=document.getElementById('ai-testo').value.trim();
-  var fi=document.getElementById('ai-img');
-  var btn=document.getElementById('ai-btn');
-  if(!txt&&fi.files.length===0){showMsg('Inserisci testo o immagine','text-amber-600');return;}
-  btn.disabled=true;
-  btn.textContent='Analisi in corso...';
-  var payload={testo:txt};
-  if(fi.files[0]){payload.immagine=await b64(fi.files[0]);payload.tipo=fi.files[0].type;}
-  try{
-    var r=await fetch('/mercatini/ai-estrai',{method:'POST',
-      headers:{'Content-Type':'application/json',
-        'X-CSRFToken':document.querySelector('meta[name="csrf-token"]').content},
-      body:JSON.stringify(payload)});
-    var j=await r.json();
-    if(j.ok&&j.dati){fillForm(j.dati);showMsg('Campi compilati! Controlla e completa.','text-green-600');}
-    else showMsg((j.error||'Errore AI'),'text-red-500');
-  }catch(e){showMsg('Errore di rete','text-red-500');}
-  finally{btn.disabled=false;btn.textContent='Compila automaticamente';}
-}
-function showMsg(t,cls){
-  var m=document.getElementById('ai-msg');
-  m.textContent=t; m.className='text-xs text-center mt-1 '+cls; m.classList.remove('hidden');
-}
-function fillForm(d){
-  function s(id,v){var e=document.getElementById(id);if(e&&v!=null&&v!=='')e.value=v;}
-  s('titolo',d.titolo);s('descrizione',d.descrizione);s('citta',d.citta);
-  s('regione',d.regione);s('provincia',d.provincia);s('indirizzo',d.indirizzo);
-  s('data_inizio',d.data_inizio);s('data_fine',d.data_fine);s('orario',d.orario);
-  s('sito_web',d.sito_web);s('telefono',d.telefono);s('email_contatto',d.email_contatto);
-  if(d.numero_espositori)s('numero_espositori',String(d.numero_espositori));
-  if(d.prezzo_ingresso)s('prezzo_ingresso',String(d.prezzo_ingresso));
-  var cb=document.getElementById('ingresso_gratuito');
-  if(cb&&d.ingresso_gratuito!=null)cb.checked=d.ingresso_gratuito;
-}
-</script>
-
-{% endblock %}
+{% block title %}{{ titolo_pagina }}{% endblock %}
 
 {% block content %}
 <div class="space-y-5">
@@ -224,6 +176,50 @@ function fillForm(d){
 
 {% block scripts %}
 <script>
+function toggleAI(){
+  var b=document.getElementById('ai-body'),c=document.getElementById('ai-chv');
+  b.classList.toggle('hidden'); c.classList.toggle('rotate-180');
+}
+function aiLabel(){
+  var f=document.getElementById('ai-img').files[0];
+  document.getElementById('ai-lbl').textContent=f?f.name:'Seleziona immagine';
+}
+function b64(file){return new Promise(function(r,j){var rd=new FileReader();rd.onload=function(){r(rd.result.split(',')[1]);};rd.onerror=j;rd.readAsDataURL(file);});}
+async function estraiDati(){
+  var txt=document.getElementById('ai-testo').value.trim();
+  var fi=document.getElementById('ai-img');
+  var btn=document.getElementById('ai-btn');
+  if(!txt&&fi.files.length===0){showMsg('Inserisci testo o immagine','text-amber-600');return;}
+  btn.disabled=true;
+  btn.textContent='Analisi in corso...';
+  var payload={testo:txt};
+  if(fi.files[0]){payload.immagine=await b64(fi.files[0]);payload.tipo=fi.files[0].type;}
+  try{
+    var r=await fetch('/mercatini/ai-estrai',{method:'POST',
+      headers:{'Content-Type':'application/json',
+        'X-CSRFToken':document.querySelector('meta[name="csrf-token"]').content},
+      body:JSON.stringify(payload)});
+    var j=await r.json();
+    if(j.ok&&j.dati){fillForm(j.dati);showMsg('Campi compilati! Controlla e completa.','text-green-600');}
+    else showMsg((j.error||'Errore AI'),'text-red-500');
+  }catch(e){showMsg('Errore di rete','text-red-500');}
+  finally{btn.disabled=false;btn.textContent='Compila automaticamente';}
+}
+function showMsg(t,cls){
+  var m=document.getElementById('ai-msg');
+  m.textContent=t; m.className='text-xs text-center mt-1 '+cls; m.classList.remove('hidden');
+}
+function fillForm(d){
+  function s(id,v){var e=document.getElementById(id);if(e&&v!=null&&v!=='')e.value=v;}
+  s('titolo',d.titolo);s('descrizione',d.descrizione);s('citta',d.citta);
+  s('regione',d.regione);s('provincia',d.provincia);s('indirizzo',d.indirizzo);
+  s('data_inizio',d.data_inizio);s('data_fine',d.data_fine);s('orario',d.orario);
+  s('sito_web',d.sito_web);s('telefono',d.telefono);s('email_contatto',d.email_contatto);
+  if(d.numero_espositori)s('numero_espositori',String(d.numero_espositori));
+  if(d.prezzo_ingresso)s('prezzo_ingresso',String(d.prezzo_ingresso));
+  var cb=document.getElementById('ingresso_gratuito');
+  if(cb&&d.ingresso_gratuito!=null)cb.checked=d.ingresso_gratuito;
+}
   const cb = document.getElementById('ingresso_gratuito');
   const box = document.getElementById('prezzo_box');
   function toggle() { box.classList.toggle('hidden', cb.checked); }
