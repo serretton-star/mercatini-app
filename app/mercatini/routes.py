@@ -174,3 +174,64 @@ def elimina(id):
     db.session.commit()
     flash('Mercatino eliminato.', 'info')
     return redirect(url_for('mercatini.index'))
+
+
+# ------------------------------------------------------------------
+# AI: estrai dati mercatino da testo o immagine
+# ------------------------------------------------------------------
+@mercatini.route('/ai-estrai', methods=['POST'])
+@login_required
+def ai_estrai():
+    """Usa Claude per estrarre dati strutturati da testo libero o screenshot."""
+    import anthropic as _ant
+    import json as _json
+    from flask import current_app, jsonify
+
+    api_key = current_app.config.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        return jsonify({'error': 'AI non disponibile'}), 503
+
+    data = request.get_json(silent=True) or {}
+    testo      = (data.get('testo') or '').strip()
+    img_b64    = (data.get('immagine') or '').strip()
+    img_tipo   = (data.get('tipo') or 'image/jpeg').strip()
+
+    if not testo and not img_b64:
+        return jsonify({'error': 'Inserisci testo o immagine'}), 400
+
+    SYSTEM = (
+        "Sei un assistente specializzato in mercatini italiani. "
+        "Analizza il testo/immagine e restituisci SOLO un oggetto JSON valido "
+        "(nessun altro testo, nessun markdown) con questi campi (null se mancante):\n"
+        '{"titolo":null,"descrizione":null,"citta":null,"regione":null,'
+        '"provincia":null,"indirizzo":null,"data_inizio":null,"data_fine":null,'
+        '"orario":null,"ingresso_gratuito":true,"prezzo_ingresso":null,'
+        '"numero_espositori":null,"sito_web":null,"telefono":null,"email_contatto":null}\n'
+        "data_inizio e data_fine in formato YYYY-MM-DD. "
+        "regione: nome completo (es. Lombardia). provincia: sigla 2 lettere (es. MI)."
+    )
+
+    content = []
+    if img_b64:
+        content.append({
+            'type': 'image',
+            'source': {'type': 'base64', 'media_type': img_tipo, 'data': img_b64}
+        })
+    content.append({'type': 'text',
+                    'text': testo if testo else "Estrai le info dall'immagine."})
+
+    try:
+        model = current_app.config.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
+        client = _ant.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model=model, max_tokens=1024, system=SYSTEM,
+            messages=[{'role': 'user', 'content': content}]
+        )
+        raw = resp.content[0].text.strip()
+        if raw.startswith('```'):
+            raw = raw.split('```')[1]
+            if raw.startswith('json'): raw = raw[4:]
+        dati = _json.loads(raw.strip())
+        return jsonify({'ok': True, 'dati': dati})
+    except (_ant.APIError, _json.JSONDecodeError, Exception) as e:
+        return jsonify({'error': str(e)}), 502
