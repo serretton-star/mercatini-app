@@ -38,7 +38,8 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = False  # HTTP only
+    WTF_CSRF_SSL_STRICT = False
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     REMEMBER_COOKIE_SECURE = True
