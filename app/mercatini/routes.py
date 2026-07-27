@@ -208,6 +208,8 @@ def ai_estrai():
         '"orario":null,"ingresso_gratuito":true,"prezzo_ingresso":null,'
         '"numero_espositori":null,"sito_web":null,"telefono":null,"email_contatto":null}\n'
         "data_inizio e data_fine in formato YYYY-MM-DD. "
+        f"Anno corrente: 2026. Se nella data manca l'anno, usa sempre 2026. "
+        "Se la data risulta gia' passata ma l'evento e' futuro, usa l'anno successivo. "
         "regione: nome completo (es. Lombardia). provincia: sigla 2 lettere (es. MI)."
     )
 
