@@ -182,6 +182,74 @@ def elimina(id):
 @mercatini.route('/ai-estrai', methods=['POST'])
 @login_required
 def ai_estrai():
+    import anthropic as _ant
+    import json as _json
+    from flask import current_app, jsonify
+    from datetime import date as _date
+
+    api_key = current_app.config.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        return jsonify({'error': 'AI non disponibile'}), 503
+
+    data = request.get_json(silent=True) or {}
+    testo = (data.get('testo') or '').strip()
+    img_b64 = (data.get('immagine') or '').strip()
+    img_tipo = (data.get('tipo') or 'image/jpeg').strip()
+
+    if not testo and not img_b64:
+        return jsonify({'error': 'Inserisci testo o immagine'}), 400
+
+    _anno = _date.today().year
+    CAMPO = '{"titolo":null,"descrizione":null,"citta":null,"regione":null,"provincia":null,"indirizzo":null,"data_inizio":null,"data_fine":null,"orario":null,"ingresso_gratuito":true,"prezzo_ingresso":null,"numero_espositori":null,"sito_web":null,"telefono":null,"email_contatto":null}'
+
+    SYSTEM = (
+        "Sei un assistente specializzato in mercatini italiani. "
+        "Analizza il testo/immagine e identifica TUTTI gli eventi distinti presenti. "
+        "Restituisci SOLO un oggetto JSON valido (nessun altro testo, nessun markdown) con questa struttura:\n"
+        '{"eventi":[...]}\n'
+        "Ogni elemento dell'array 'eventi' rappresenta un evento o un periodo di date distinto "
+        "e ha questi campi (null se mancante):\n"
+        f"{CAMPO}\n"
+        "REGOLE IMPORTANTI:\n"
+        "- Se il testo parla di un solo evento: array con 1 elemento.\n"
+        "- Se ci sono piu' eventi distinti (organizzatori, luoghi o date diverse): un elemento per ciascuno.\n"
+        "- Se uno stesso evento ha piu' periodi di date (es. settimana 17-23 ago, poi 24-30 ago): "
+        "  crea un elemento separato per ogni periodo, con stesso titolo/luogo ma date diverse.\n"
+        "- Date in formato YYYY-MM-DD. "
+        f"Anno corrente: {_anno}. Se manca l'anno usa {_anno}. "
+        "Se la data e' passata ma l'evento e' futuro usa l'anno successivo.\n"
+        "- regione: nome completo (es. Lombardia). provincia: sigla 2 lettere (es. MI).\n"
+        "- Max 12 eventi nell'array."
+    )
+
+    content = []
+    if img_b64:
+        content.append({'type': 'image', 'source': {'type': 'base64', 'media_type': img_tipo, 'data': img_b64}})
+    content.append({'type': 'text', 'text': testo if testo else "Estrai le info dall'immagine."})
+
+    try:
+        model = current_app.config.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
+        client = _ant.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model=model, max_tokens=2048, system=SYSTEM,
+            messages=[{'role': 'user', 'content': content}]
+        )
+        raw = resp.content[0].text.strip()
+        if raw.startswith('```'):
+            raw = raw.split('```')[1]
+            if raw.startswith('json'): raw = raw[4:]
+        dati = _json.loads(raw.strip())
+        # Normalize: accept both {"eventi":[...]} and legacy single-object
+        if 'eventi' in dati:
+            eventi = dati['eventi']
+        else:
+            eventi = [dati]
+        return jsonify({'ok': True, 'eventi': eventi})
+    except (_ant.APIError, _json.JSONDecodeError, Exception) as e:
+        return jsonify({'error': str(e)}), 502
+
+@login_required
+def ai_estrai():
     """Usa Claude per estrarre dati strutturati da testo libero o screenshot."""
     import anthropic as _ant
     import json as _json
