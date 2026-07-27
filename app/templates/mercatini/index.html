@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}Mercatini Artigianali in Italia{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <!-- Header + CTA -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-secondary">Mercatini</h1>
+      {% if totale_risultati is defined %}
+      <p class="text-xs text-gray-400 mt-0.5">
+        {{ totale_risultati }} risultat{{ 'o' if totale_risultati == 1 else 'i' }}
+      </p>
+      {% endif %}
+    </div>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('mercatini.nuovo') }}"
+       class="bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg
+              hover:bg-primary-dark transition-colors">
+      + Aggiungi
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Filtri + Ricerca -->
+  <form method="GET" action="{{ url_for('mercatini.index') }}"
+        class="bg-white rounded-xl shadow-sm p-4 space-y-3">
+
+    <!-- Barra ricerca -->
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+      <input type="text" name="q" value="{{ filtro_q }}"
+             placeholder="Cerca per nome, città, regione..."
+             class="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-2 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-primary/30">
+    </div>
+
+    <!-- Filtri secondari -->
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Regione</label>
+        <input type="text" name="regione" value="{{ filtro_regione }}"
+               placeholder="es. Lombardia"
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-primary/30">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Città</label>
+        <input type="text" name="citta" value="{{ filtro_citta }}"
+               placeholder="es. Milano"
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-primary/30">
+      </div>
+    </div>
+
+    {% if categorie %}
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
+      <select name="categoria"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/30">
+        <option value="0">Tutte</option>
+        {% for c in categorie %}
+        <option value="{{ c.id }}" {% if filtro_cat == c.id %}selected{% endif %}>
+          {{ c.nome }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="flex gap-2">
+      <button type="submit"
+              class="flex-1 bg-secondary text-white text-sm font-medium py-2 rounded-lg
+                     hover:bg-secondary-light transition-colors">
+        Cerca
+      </button>
+      {% if filtro_q or filtro_regione or filtro_citta or filtro_cat %}
+      <a href="{{ url_for('mercatini.index') }}"
+         class="px-4 py-2 border border-gray-200 text-gray-500 text-sm rounded-lg
+                hover:bg-gray-50 transition-colors">
+        ✕
+      </a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Lista -->
+  {% if mercatini %}
+  <div class="space-y-3">
+    {% for m in mercatini %}
+    <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
+       class="block bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
+      <div class="flex justify-between items-start gap-2">
+        <div class="flex-1 min-w-0">
+          <h2 class="font-semibold text-secondary truncate">{{ m.titolo }}</h2>
+          <p class="text-sm text-gray-500 mt-0.5">
+            📍 {{ m.citta }}{% if m.provincia %} ({{ m.provincia }}){% endif %}, {{ m.regione }}
+          </p>
+          <p class="text-sm text-primary font-medium mt-1">
+            📅 {{ m.data_inizio.strftime('%d/%m/%Y') }}
+            {% if m.data_fine != m.data_inizio %}– {{ m.data_fine.strftime('%d/%m/%Y') }}{% endif %}
+          </p>
+        </div>
+        <div class="shrink-0 text-right">
+          <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full
+            {% if m.is_in_corso %}bg-green-100 text-green-700
+            {% elif m.is_futuro %}bg-blue-100 text-blue-700
+            {% else %}bg-gray-100 text-gray-500{% endif %}">
+            {% if m.is_in_corso %}In corso{% elif m.is_futuro %}Prossimo{% else %}Passato{% endif %}
+          </span>
+          <p class="text-xs text-gray-400 mt-1">{{ m.prezzo_display }}</p>
+        </div>
+      </div>
+      {% if m.categorie %}
+      <div class="flex flex-wrap gap-1 mt-2">
+        {% for c in m.categorie %}
+        <span class="text-xs bg-warm-dark text-secondary px-2 py-0.5 rounded-full">{{ c.nome }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Paginazione -->
+  {% if pagination.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('mercatini.index', page=pagination.prev_num, q=filtro_q,
+               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat) }}"
+       class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">← Prec</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-gray-500">
+      {{ pagination.page }} / {{ pagination.pages }}
+    </span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('mercatini.index', page=pagination.next_num, q=filtro_q,
+               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat) }}"
+       class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">Succ →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="text-center py-16 text-gray-400">
+    <p class="text-4xl mb-3">🔍</p>
+    {% if filtro_q or filtro_regione or filtro_citta or filtro_cat %}
+    <p class="font-medium">Nessun risultato per i filtri applicati.</p>
+    <a href="{{ url_for('mercatini.index') }}"
+       class="inline-block mt-3 text-primary text-sm hover:underline">
+      Rimuovi filtri →
+    </a>
+    {% else %}
+    <p class="font-medium">Nessun mercatino ancora pubblicato.</p>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('mercatini.nuovo') }}"
+       class="inline-block mt-3 text-primary text-sm hover:underline">
+      Aggiungi il primo →
+    </a>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

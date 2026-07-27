@@ -1,0 +1,23 @@
+/* Mercatini App — stili custom */
+/* Tailwind CDN gestisce la maggior parte dello styling */
+
+/* Scrollbar sottile su webkit */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+/* Transizioni form */
+input:focus, select:focus, textarea:focus {
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* Animazione fade-in per flash messages */
+[class*="bg-green-"], [class*="bg-red-"],
+[class*="bg-yellow-"], [class*="bg-blue-"] {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

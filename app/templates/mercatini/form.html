@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}{{ titolo_pagina }}{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-xl font-bold text-secondary">{{ titolo_pagina }}</h1>
+    {% if mercatino is defined %}
+    <p class="text-sm text-gray-400 mt-0.5">ID #{{ mercatino.id }}</p>
+    {% endif %}
+  </div>
+
+  <form method="POST" novalidate class="space-y-4">
+    {{ form.hidden_tag() }}
+
+    <!-- Macro campo -->
+    {% macro campo(field, tipo='text', placeholder='', rows=4) %}
+    <div>
+      {{ field.label(class='block text-sm font-medium text-secondary mb-1') }}
+      {% if tipo == 'textarea' %}
+        {{ field(rows=rows, placeholder=placeholder,
+                 class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-primary/30
+                        ' + ('border-red-300' if field.errors else '')) }}
+      {% else %}
+        {{ field(type=tipo, placeholder=placeholder,
+                 class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-primary/30
+                        ' + ('border-red-300' if field.errors else '')) }}
+      {% endif %}
+      {% for e in field.errors %}
+      <p class="text-xs text-red-500 mt-1">{{ e }}</p>
+      {% endfor %}
+    </div>
+    {% endmacro %}
+
+    <!-- Titolo -->
+    {{ campo(form.titolo, placeholder='Nome del mercatino') }}
+
+    <!-- Descrizione -->
+    {{ campo(form.descrizione, tipo='textarea', rows=4,
+             placeholder='Descrivi il mercatino: tipologia di prodotti, storia, atmosfera...') }}
+
+    <!-- Luogo -->
+    <div class="grid grid-cols-2 gap-3">
+      {{ campo(form.citta, placeholder='es. Milano') }}
+      {{ campo(form.regione, placeholder='es. Lombardia') }}
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      {{ campo(form.provincia, placeholder='es. MI') }}
+      {{ campo(form.indirizzo, placeholder='Piazza o via') }}
+    </div>
+
+    <!-- Date -->
+    <div class="grid grid-cols-2 gap-3">
+      {{ campo(form.data_inizio, tipo='date') }}
+      {{ campo(form.data_fine, tipo='date') }}
+    </div>
+    {{ campo(form.orario, placeholder='es. 10:00 - 19:00') }}
+
+    <!-- Ingresso -->
+    <div class="bg-warm rounded-lg p-3 space-y-2">
+      <label class="flex items-center gap-2 cursor-pointer">
+        {{ form.ingresso_gratuito(class='w-4 h-4 text-primary', id='ingresso_gratuito') }}
+        <span class="text-sm font-medium text-secondary">{{ form.ingresso_gratuito.label.text }}</span>
+      </label>
+      <div id="prezzo_box" class="hidden">
+        {{ campo(form.prezzo_ingresso, tipo='number', placeholder='0.00') }}
+      </div>
+    </div>
+
+    {{ campo(form.numero_espositori, tipo='number', placeholder='es. 50') }}
+
+    <!-- Contatti -->
+    <div class="border-t border-gray-100 pt-4 space-y-3">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Contatti (opzionale)</p>
+      {{ campo(form.sito_web, placeholder='https://...') }}
+      <div class="grid grid-cols-2 gap-3">
+        {{ campo(form.telefono, tipo='tel', placeholder='es. 02 1234567') }}
+        {{ campo(form.email_contatto, tipo='email', placeholder='info@mercatino.it') }}
+      </div>
+    </div>
+
+    <!-- Categorie -->
+    {% if form.categorie.choices %}
+    <div class="border-t border-gray-100 pt-4">
+      <p class="text-sm font-medium text-secondary mb-2">{{ form.categorie.label.text }}</p>
+      <div class="flex flex-wrap gap-2">
+        {% for subfield in form.categorie %}
+        <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+          {{ subfield(class='w-4 h-4 text-primary') }}
+          <span>{{ subfield.label.text }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Pubblica -->
+    <div class="border-t border-gray-100 pt-4">
+      <label class="flex items-center gap-2 cursor-pointer">
+        {{ form.pubblicato(class='w-4 h-4 text-primary') }}
+        <span class="text-sm font-medium text-secondary">{{ form.pubblicato.label.text }}</span>
+      </label>
+      <p class="text-xs text-gray-400 mt-1 ml-6">
+        Se non pubblicato, il mercatino sarà visibile solo a te.
+      </p>
+    </div>
+
+    <!-- Bottoni -->
+    <div class="flex gap-3 pt-2">
+      <button type="submit"
+              class="flex-1 bg-primary text-white font-medium py-2.5 rounded-lg
+                     hover:bg-primary-dark transition-colors">
+        {% if mercatino is defined %}Salva modifiche{% else %}Pubblica mercatino{% endif %}
+      </button>
+      <a href="{{ url_for('mercatini.index') }}"
+         class="px-5 py-2.5 border border-gray-200 text-gray-500 text-sm rounded-lg
+                hover:bg-gray-50 transition-colors">
+        Annulla
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const cb = document.getElementById('ingresso_gratuito');
+  const box = document.getElementById('prezzo_box');
+  function toggle() { box.classList.toggle('hidden', cb.checked); }
+  cb.addEventListener('change', toggle);
+  toggle();
+</script>
+{% endblock %}

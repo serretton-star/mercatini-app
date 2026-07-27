@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-bold text-secondary">Admin Panel</h1>
+    <span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-medium">
+      Admin
+    </span>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid grid-cols-2 gap-3">
+    {% for label, val, color in [
+      ('Utenti', stats.utenti, 'text-blue-600'),
+      ('Mercatini', stats.mercatini, 'text-secondary'),
+      ('Pubblicati', stats.pubblicati, 'text-green-600'),
+      ('Bozze', stats.bozze, 'text-yellow-600'),
+    ] %}
+    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+      <p class="text-2xl font-bold {{ color }}">{{ val }}</p>
+      <p class="text-xs text-gray-400 mt-0.5">{{ label }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CATEGORIE -->
+  <section class="bg-white rounded-xl shadow-sm p-4">
+    <h2 class="font-semibold text-secondary mb-3">Categorie ({{ categorie|length }})</h2>
+    <div class="flex flex-wrap gap-2 mb-4">
+      {% for c in categorie %}
+      <div class="flex items-center gap-1 bg-warm rounded-full px-3 py-1">
+        <span class="text-sm text-secondary">{{ c.nome }}</span>
+        <span class="text-xs text-gray-400">({{ c.mercatini.count() }})</span>
+        <form method="POST"
+              action="{{ url_for('admin.elimina_categoria', id=c.id) }}"
+              class="inline"
+              onsubmit="return confirm('Eliminare la categoria {{ c.nome }}?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="text-gray-400 hover:text-red-400 ml-1 leading-none">✕</button>
+        </form>
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-400">Nessuna categoria. Aggiungine una.</p>
+      {% endfor %}
+    </div>
+    <form method="POST" action="{{ url_for('admin.crea_categoria') }}"
+          class="flex gap-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="nome" placeholder="Nome nuova categoria"
+             class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-primary/30">
+      <button type="submit"
+              class="bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg
+                     hover:bg-primary-dark transition-colors">
+        Aggiungi
+      </button>
+    </form>
+  </section>
+
+  <!-- MERCATINI -->
+  <section>
+    <h2 class="font-semibold text-secondary mb-3">Tutti i mercatini</h2>
+    <div class="space-y-2">
+      {% for m in mercatini %}
+      <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-secondary truncate">{{ m.titolo }}</p>
+          <p class="text-xs text-gray-400">
+            {{ m.citta }} · {{ m.data_inizio.strftime('%d/%m/%Y') }}
+            · {{ m.organizzatore.nome_completo }}
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs {% if m.pubblicato %}text-green-600{% else %}text-yellow-500{% endif %}">
+            {{ 'pub' if m.pubblicato else 'bozza' }}
+          </span>
+          <form method="POST" action="{{ url_for('admin.toggle_pubblicato', id=m.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="text-xs border border-gray-200 px-2 py-1 rounded-lg
+                           hover:bg-gray-50 transition-colors">
+              {{ 'Nascondi' if m.pubblicato else 'Pubblica' }}
+            </button>
+          </form>
+          <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
+             class="text-xs text-primary hover:underline">Vedi</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- UTENTI -->
+  <section>
+    <h2 class="font-semibold text-secondary mb-3">Utenti registrati ({{ utenti|length }})</h2>
+    <div class="space-y-2">
+      {% for u in utenti %}
+      <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-secondary">{{ u.nome_completo }}</p>
+          <p class="text-xs text-gray-400">{{ u.email }} · {{ u.ruolo }}</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs {% if u.is_active %}text-green-600{% else %}text-red-400{% endif %}">
+            {{ 'attivo' if u.is_active else 'bloccato' }}
+          </span>
+          {% if u.id != current_user.id %}
+          <form method="POST" action="{{ url_for('admin.toggle_utente', id=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="text-xs border border-gray-200 px-2 py-1 rounded-lg
+                           hover:bg-gray-50 transition-colors">
+              {{ 'Blocca' if u.is_active else 'Attiva' }}
+            </button>
+          </form>
+          <form method="POST" action="{{ url_for('admin.promuovi_admin', id=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="text-xs border border-orange-200 text-orange-500 px-2 py-1
+                           rounded-lg hover:bg-orange-50 transition-colors">
+              {{ 'Rimuovi admin' if u.ruolo == 'admin' else 'Admin' }}
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</div>
+{% endblock %}

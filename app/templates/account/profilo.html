@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Il mio account{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-xl font-bold text-secondary">Il mio account</h1>
+
+  <!-- INFO UTENTE -->
+  <div class="bg-white rounded-xl shadow-sm p-5">
+    <div class="flex items-center gap-4 mb-4">
+      <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center
+                  text-primary font-bold text-lg">
+        {{ current_user.nome[0] }}{{ current_user.cognome[0] }}
+      </div>
+      <div>
+        <p class="font-semibold text-secondary">{{ current_user.nome_completo }}</p>
+        <p class="text-sm text-gray-400">{{ current_user.email }}</p>
+        {% if current_user.is_admin %}
+        <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Admin</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if current_user.bio %}
+    <p class="text-sm text-gray-500">{{ current_user.bio }}</p>
+    {% endif %}
+  </div>
+
+  <!-- I MIEI MERCATINI -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-secondary">I miei mercatini</h2>
+      <a href="{{ url_for('mercatini.nuovo') }}"
+         class="text-sm text-primary hover:underline">+ Nuovo</a>
+    </div>
+    {% if miei %}
+    <div class="space-y-2">
+      {% for m in miei %}
+      <div class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-secondary truncate">{{ m.titolo }}</p>
+          <p class="text-xs text-gray-400">
+            {{ m.citta }} · {{ m.data_inizio.strftime('%d/%m/%Y') }}
+            {% if not m.pubblicato %}
+            <span class="ml-1 text-yellow-500">● bozza</span>
+            {% endif %}
+          </p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <a href="{{ url_for('mercatini.modifica', id=m.id) }}"
+             class="text-xs text-secondary border border-gray-200 px-2.5 py-1
+                    rounded-lg hover:bg-gray-50 transition-colors">
+            Modifica
+          </a>
+          <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
+             class="text-xs text-primary border border-primary/30 px-2.5 py-1
+                    rounded-lg hover:bg-primary/5 transition-colors">
+            Vedi
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-8 text-gray-400">
+      <p>Non hai ancora inserito mercatini.</p>
+      <a href="{{ url_for('mercatini.nuovo') }}"
+         class="inline-block mt-3 text-primary text-sm hover:underline">
+        Aggiungi il primo →
+      </a>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- MODIFICA PROFILO -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-4">Modifica profilo</h2>
+    <form method="POST" action="{{ url_for('account.modifica_profilo') }}" novalidate>
+      {{ profilo_form.hidden_tag() }}
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            {{ profilo_form.nome.label(class='block text-sm font-medium text-secondary mb-1') }}
+            {{ profilo_form.nome(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                                       focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+          </div>
+          <div>
+            {{ profilo_form.cognome.label(class='block text-sm font-medium text-secondary mb-1') }}
+            {{ profilo_form.cognome(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                                          focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+          </div>
+        </div>
+        <div>
+          {{ profilo_form.bio.label(class='block text-sm font-medium text-secondary mb-1') }}
+          {{ profilo_form.bio(rows=3, placeholder='Raccontati in poche righe...',
+                              class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                                     focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+        </div>
+        <button type="submit"
+                class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg
+                       hover:bg-secondary-light transition-colors">
+          Salva profilo
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- CAMBIA PASSWORD -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-4">Cambia password</h2>
+    <form method="POST" action="{{ url_for('account.cambia_password') }}" novalidate>
+      {{ pw_form.hidden_tag() }}
+      <div class="space-y-3">
+        {% for field in [pw_form.password_attuale, pw_form.nuova_password, pw_form.nuova_password2] %}
+        <div>
+          {{ field.label(class='block text-sm font-medium text-secondary mb-1') }}
+          {{ field(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                          focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+          {% for e in field.errors %}
+          <p class="text-xs text-red-500 mt-1">{{ e }}</p>
+          {% endfor %}
+        </div>
+        {% endfor %}
+        <button type="submit"
+                class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg
+                       hover:bg-secondary-light transition-colors">
+          Cambia password
+        </button>
+      </div>
+    </form>
+  </section>
+
+</div>
+{% endblock %}

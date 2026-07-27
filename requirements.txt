@@ -1,0 +1,19 @@
+# Mercatini App — dipendenze Python
+# Generato per Python 3.14 (Ubuntu 26.04)
+
+flask==3.1.0
+flask-sqlalchemy==3.1.1
+flask-migrate==4.0.7
+flask-login==0.6.3
+flask-wtf==1.2.1
+flask-bcrypt==1.0.1
+flask-limiter==3.8.0
+psycopg2==2.9.12
+python-dotenv==1.0.1
+gunicorn==22.0.0
+bleach==6.1.0
+anthropic==0.30.1
+email-validator==2.1.1
+marshmallow==3.21.1
+python-slugify==8.0.4
+flask-mail==0.10.0

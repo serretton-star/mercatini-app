@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% macro field(f, placeholder='', type='text', autocomplete='') %}
+<div class="mb-4">
+  {{ f.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+  <input type="{{ type }}"
+         name="{{ f.name }}" id="{{ f.id }}"
+         value="{{ f.data or '' }}"
+         placeholder="{{ placeholder }}"
+         autocomplete="{{ autocomplete }}"
+         class="w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none
+                focus:ring-2 focus:ring-primary focus:border-transparent
+                {{ 'border-red-400' if f.errors else 'border-gray-300' }}">
+  {% for e in f.errors %}
+    <p class="text-red-500 text-xs mt-1">{{ e }}</p>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="max-w-sm mx-auto mt-4">
+  <h1 class="text-2xl font-bold text-secondary mb-1">Registrati</h1>
+  <p class="text-sm text-gray-500 mb-6">
+    Già registrato?
+    <a href="{{ url_for('auth.login') }}" class="text-primary font-medium hover:underline">
+      Accedi
+    </a>
+  </p>
+
+  <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="grid grid-cols-2 gap-3 mb-0">
+      {{ field(form.nome, placeholder='Mario', autocomplete='given-name') }}
+      {{ field(form.cognome, placeholder='Rossi', autocomplete='family-name') }}
+    </div>
+
+    {{ field(form.email, placeholder='mario@example.it', type='email', autocomplete='email') }}
+    {{ field(form.password, placeholder='Minimo 8 caratteri', type='password', autocomplete='new-password') }}
+    {{ field(form.password2, placeholder='Ripeti la password', type='password', autocomplete='new-password') }}
+
+    <!-- Privacy -->
+    <div class="mb-6 p-3 bg-warm-dark rounded-lg border border-gray-200">
+      <label class="flex items-start gap-2 cursor-pointer">
+        {{ form.consenso_privacy(class="mt-0.5 h-4 w-4 text-primary border-gray-300 rounded flex-shrink-0") }}
+        <span class="text-xs text-gray-600">
+          Ho letto e accetto la
+          <a href="#" class="text-primary hover:underline">Privacy Policy</a>.
+          I tuoi dati sono trattati per fornire il servizio (Art. 6(1)(b) GDPR).
+        </span>
+      </label>
+      {% for e in form.consenso_privacy.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ e }}</p>
+      {% endfor %}
+    </div>
+
+    {{ form.submit(
+         class="w-full bg-primary hover:bg-primary-dark text-white font-semibold
+                py-2.5 px-4 rounded-lg transition-colors text-sm"
+    ) }}
+  </form>
+</div>
+{% endblock %}

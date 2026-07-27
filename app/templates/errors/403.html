@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Accesso negato{% endblock %}
+{% block content %}
+<div class="text-center py-20">
+  <p class="text-6xl mb-4">🚫</p>
+  <h1 class="text-2xl font-bold text-secondary mb-2">Accesso negato</h1>
+  <p class="text-gray-500 text-sm mb-6">Non hai i permessi per accedere a questa pagina.</p>
+  <a href="{{ url_for('main.index') }}"
+     class="bg-primary text-white font-medium px-5 py-2.5 rounded-lg
+            hover:bg-primary-dark transition-colors text-sm">
+    Torna alla home
+  </a>
+</div>
+{% endblock %}
