@@ -176,12 +176,14 @@
 
 {% block scripts %}
 <script>
+var pastedFile = null;
 function toggleAI(){
-  var b=document.getElementById('ai-body'),c=document.getElementById('ai-chv');
-  b.classList.toggle('hidden'); c.classList.toggle('rotate-180');
+  var b=document.getElementById('ai-body'),ch=document.getElementById('ai-chv');
+  b.classList.toggle('hidden'); ch.classList.toggle('rotate-180');
 }
 function aiLabel(){
   var f=document.getElementById('ai-img').files[0];
+  if(f){ pastedFile=null; var p=document.getElementById('ai-preview'); if(p)p.remove(); }
   document.getElementById('ai-lbl').textContent=f?f.name:'Seleziona immagine';
 }
 function b64(file){return new Promise(function(r,j){var rd=new FileReader();rd.onload=function(){r(rd.result.split(',')[1]);};rd.onerror=j;rd.readAsDataURL(file);});}
@@ -189,11 +191,11 @@ async function estraiDati(){
   var txt=document.getElementById('ai-testo').value.trim();
   var fi=document.getElementById('ai-img');
   var btn=document.getElementById('ai-btn');
-  if(!txt&&fi.files.length===0){showMsg('Inserisci testo o immagine','text-amber-600');return;}
-  btn.disabled=true;
-  btn.textContent='Analisi in corso...';
+  var fileToUse=pastedFile||(fi.files[0]||null);
+  if(!txt&&!fileToUse){showMsg('Inserisci testo o incolla/carica immagine','text-amber-600');return;}
+  btn.disabled=true; btn.textContent='Analisi in corso...';
   var payload={testo:txt};
-  if(fi.files[0]){payload.immagine=await b64(fi.files[0]);payload.tipo=fi.files[0].type;}
+  if(fileToUse){payload.immagine=await b64(fileToUse);payload.tipo=fileToUse.type||'image/png';}
   try{
     var r=await fetch('/mercatini/ai-estrai',{method:'POST',
       headers:{'Content-Type':'application/json',
@@ -220,10 +222,40 @@ function fillForm(d){
   var cb=document.getElementById('ingresso_gratuito');
   if(cb&&d.ingresso_gratuito!=null)cb.checked=d.ingresso_gratuito;
 }
-  const cb = document.getElementById('ingresso_gratuito');
-  const box = document.getElementById('prezzo_box');
-  function toggle() { box.classList.toggle('hidden', cb.checked); }
-  cb.addEventListener('change', toggle);
-  toggle();
+/* Paste Ctrl+V screenshot */
+document.addEventListener('paste',function(e){
+  var body=document.getElementById('ai-body');
+  if(!body||body.classList.contains('hidden'))return;
+  var items=(e.clipboardData||window.clipboardData).items;
+  if(!items)return;
+  for(var i=0;i<items.length;i++){
+    if(items[i].type.indexOf('image')!==-1){
+      e.preventDefault();
+      pastedFile=items[i].getAsFile();
+      document.getElementById('ai-img').value='';
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        var prev=document.getElementById('ai-preview');
+        if(!prev){
+          prev=document.createElement('img');
+          prev.id='ai-preview';
+          prev.style.cssText='max-height:72px;border-radius:6px;margin-top:6px;border:2px solid #fcd34d;display:block;';
+          document.getElementById('ai-lbl').closest('div').appendChild(prev);
+        }
+        prev.src=ev.target.result;
+      };
+      reader.readAsDataURL(pastedFile);
+      document.getElementById('ai-lbl').textContent='Screenshot incollato ' + String.fromCharCode(10003);
+      showMsg('Immagine rilevata! Premi "Compila automaticamente".','text-amber-600');
+      break;
+    }
+  }
+});
+/* Ingresso gratuito toggle */
+const cb=document.getElementById('ingresso_gratuito');
+const box=document.getElementById('prezzo_box');
+function toggle(){box.classList.toggle('hidden',cb.checked);}
+cb.addEventListener('change',toggle);
+toggle();
 </script>
 {% endblock %}
