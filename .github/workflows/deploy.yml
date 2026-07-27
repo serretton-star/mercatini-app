@@ -20,7 +20,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
+          port: 22
           script: |
             set -e
             cd /var/www/mercatini
@@ -32,7 +32,9 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt --quiet
 
-            # Esegui migrazioni DB (idempotente)
+            # Esegui migrazioni DB
+            export FLASK_APP=wsgi:app
+            export FLASK_ENV=production
             flask db upgrade
 
             # Riavvia il servizio
