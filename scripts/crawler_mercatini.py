@@ -74,19 +74,29 @@ PROV_REGIONE = {
 
 # ─── Sorgenti ──────────────────────────────────────────────────────────────
 SORGENTI = [
+    # eventiesagre.it – artigianato per mese
     'https://www.eventiesagre.it/Mercatini_Artigianato/elenco.html?mese=8&anno=2026',
     'https://www.eventiesagre.it/Mercatini_Artigianato/elenco.html?mese=9&anno=2026',
     'https://www.eventiesagre.it/Mercatini_Artigianato/elenco.html?mese=10&anno=2026',
-    'https://www.unicofattoamano.it/candidatura-mercato/',
-    'https://gipsygarden.it/open-call/',
+    # eventiesagre.it – altre categorie
+    'https://www.eventiesagre.it/Fiere_Artigianato/elenco.html?mese=9&anno=2026',
+    'https://www.eventiesagre.it/Fiere_Artigianato/elenco.html?mese=10&anno=2026',
+    'https://www.eventiesagre.it/Mercatini/elenco.html?mese=9&anno=2026',
+    'https://www.eventiesagre.it/Mercatini/elenco.html?mese=10&anno=2026',
+    # organizzatori con open call
     'https://lo-smanet.com/',
-    'https://www.handmadestories.it/',
-    'https://www.eventiesagre.it/Mercatini_Creativi/elenco.html?mese=9&anno=2026',
-    'https://www.eventiesagre.it/Mercatini_Creativi/elenco.html?mese=10&anno=2026',
+    'https://wemakeapair.com/',
+    'https://www.mercatinobiologico.it/',
+    # portali aggregatori
+    'https://www.fiere.it/mercatini-artigianato.asp',
+    'https://www.italyguides.it/it/eventi/mercatini-artigianato',
 ]
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (compatible; MercatiniBot/1.0; +https://mercatini.blog)',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'DNT': '1',
     'Accept-Language': 'it-IT,it;q=0.9',
 }
 
