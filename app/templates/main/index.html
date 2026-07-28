@@ -17,19 +17,29 @@
         Scopri, condividi e partecipa
       {% endif %}
     </p>
-    <div class="flex justify-center gap-3 mt-5">
+    <div class="flex flex-wrap justify-center gap-3 mt-5">
       <a href="{{ url_for('mercatini.index') }}"
          class="bg-primary text-white font-medium px-5 py-2.5 rounded-lg
                 hover:bg-primary-dark transition-colors text-sm">
         Esplora tutti
       </a>
       {% if current_user.is_authenticated %}
-      <a href="{{ url_for('mercatini.nuovo') }}"
+      <a href="{{ url_for('chat.index') }}"
          class="border border-primary text-primary font-medium px-5 py-2.5
-                rounded-lg hover:bg-primary/5 transition-colors text-sm">
+                rounded-lg hover:bg-primary/5 transition-colors text-sm flex items-center gap-1.5">
+        🤖 Assistente AI
+      </a>
+      <a href="{{ url_for('mercatini.nuovo') }}"
+         class="border border-gray-200 text-secondary font-medium px-5 py-2.5
+                rounded-lg hover:bg-gray-50 transition-colors text-sm">
         + Aggiungi
       </a>
       {% else %}
+      <a href="{{ url_for('chat.index') }}"
+         class="border border-primary text-primary font-medium px-5 py-2.5
+                rounded-lg hover:bg-primary/5 transition-colors text-sm flex items-center gap-1.5">
+        🤖 Assistente AI
+      </a>
       <a href="{{ url_for('auth.register') }}"
          class="border border-gray-200 text-secondary font-medium px-5 py-2.5
                 rounded-lg hover:bg-gray-50 transition-colors text-sm">
@@ -37,7 +47,27 @@
       </a>
       {% endif %}
     </div>
+
+    <!-- Bottoni secondari: Scarica app + Condividi -->
+    <div class="flex justify-center gap-3 mt-3">
+      <button id="btn-installa" onclick="installaApp()"
+        class="flex items-center gap-1.5 text-xs border border-gray-300 text-gray-600
+               px-4 py-2 rounded-full hover:border-primary hover:text-primary transition-colors">
+        &#11015; Scarica app
+      </button>
+      <button onclick="condividi()"
+        class="flex items-center gap-1.5 text-xs border border-gray-300 text-gray-600
+               px-4 py-2 rounded-full hover:border-primary hover:text-primary transition-colors">
+        &#8679; Condividi
+      </button>
+    </div>
+
+    <!-- Toast notifica -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+         bg-secondary text-white text-xs px-5 py-2.5 rounded-full shadow-lg"></div>
   </div>
+
+  {% if current_user.is_authenticated %}
 
   <!-- IN CORSO -->
   {% if in_corso %}
@@ -104,26 +134,43 @@
   </section>
   {% endif %}
 
-  <!-- EMPTY STATE -->
+  <!-- EMPTY STATE (loggato, nessun evento) -->
   {% if not in_corso and not prossimi %}
   <div class="text-center py-12 text-gray-400">
     <p class="text-3xl mb-3">🌱</p>
     <p class="font-medium text-secondary">Nessun mercatino ancora pubblicato.</p>
-    <p class="text-sm mt-1">Sii il primo ad aggiungerne uno!</p>
-    {% if not current_user.is_authenticated %}
-    <a href="{{ url_for('auth.register') }}"
-       class="inline-block mt-4 bg-primary text-white text-sm font-medium
-              px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors">
-      Registrati gratis
-    </a>
-    {% else %}
     <a href="{{ url_for('mercatini.nuovo') }}"
        class="inline-block mt-4 bg-primary text-white text-sm font-medium
               px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors">
       Aggiungi mercatino
     </a>
-    {% endif %}
   </div>
+  {% endif %}
+
+  {% else %}
+
+  <!-- CTA per utenti anonimi -->
+  <div class="text-center py-10 px-4">
+    <p class="text-5xl mb-4">🏪</p>
+    <h2 class="text-lg font-bold text-secondary mb-2">Scopri i mercatini vicino a te</h2>
+    <p class="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
+      Registrati gratis per vedere tutti gli eventi, ricevere notifiche
+      nella tua provincia e aggiungere i tuoi mercatini.
+    </p>
+    <div class="flex flex-col gap-3 max-w-xs mx-auto">
+      <a href="{{ url_for('auth.register') }}"
+         class="bg-primary text-white text-sm font-semibold px-5 py-3
+                rounded-lg hover:bg-primary-dark transition-colors">
+        Registrati gratis →
+      </a>
+      <a href="{{ url_for('auth.login') }}"
+         class="border border-gray-200 text-secondary text-sm font-medium
+                px-5 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+        Ho già un account — Accedi
+      </a>
+    </div>
+  </div>
+
   {% endif %}
 
   <!-- FEATURE PILLS -->
@@ -138,4 +185,126 @@
   </div>
 
 </div>
+
+{% block scripts %}
+<!-- Modale installazione -->
+<div id="install-modal" class="hidden fixed inset-0 z-50 flex items-end justify-center p-4">
+  <div class="absolute inset-0 bg-black/40" onclick="chiudiModale()"></div>
+  <div class="relative bg-white rounded-2xl shadow-xl p-5 w-full max-w-sm z-10">
+    <h3 class="font-bold text-secondary mb-3 text-base" id="modal-titolo">Installa l'app</h3>
+    <div id="modal-corpo" class="text-sm text-gray-600 space-y-2"></div>
+    <button onclick="chiudiModale()"
+      class="mt-4 w-full bg-primary text-white rounded-lg py-2.5 text-sm font-medium">
+      Ho capito
+    </button>
+  </div>
+</div>
+
+<script>
+var _deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  // Non serve mostrare/nascondere: il bottone e' sempre visibile
+});
+
+window.addEventListener('appinstalled', function() {
+  _deferredPrompt = null;
+  showToast('App installata! Cercala nella schermata Home.');
+});
+
+function installaApp() {
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var isStandalone = (window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true);
+
+  if (isStandalone) {
+    showToast("App già installata!");
+    return;
+  }
+
+  // Android Chrome con prompt disponibile: usa il prompt nativo
+  if (_deferredPrompt) {
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(r) {
+      if (r.outcome === 'accepted') showToast('Installazione avviata!');
+      _deferredPrompt = null;
+    });
+    return;
+  }
+
+  // iOS Safari / Chrome iOS
+  if (isIos) {
+    document.getElementById('modal-titolo').textContent = 'Installa su iPhone/iPad';
+    document.getElementById('modal-corpo').innerHTML =
+      '<p><strong>Safari:</strong></p>'
+      + '<ol class="list-decimal ml-4 space-y-1">'
+      + '<li>Tocca il tasto <strong>Condividi</strong> &#x2197; in basso</li>'
+      + '<li>Scorri e scegli <strong>"Aggiungi a schermata Home"</strong></li>'
+      + '<li>Tocca <strong>Aggiungi</strong></li>'
+      + '</ol>'
+      + '<p class="mt-2 text-xs text-gray-400">Se usi Chrome su iOS, apri prima il menu &#8942; e scegli "Apri in Safari".</p>';
+    document.getElementById('install-modal').classList.remove('hidden');
+    return;
+  }
+
+  // Android senza prompt (es. Firefox, Samsung Browser, o Chrome dopo dismiss)
+  if (isAndroid) {
+    document.getElementById('modal-titolo').textContent = 'Installa su Android';
+    document.getElementById('modal-corpo').innerHTML =
+      '<p><strong>Chrome:</strong></p>'
+      + '<ol class="list-decimal ml-4 space-y-1">'
+      + '<li>Tocca il menu <strong>&#8942;</strong> in alto a destra</li>'
+      + '<li>Scegli <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li>'
+      + '</ol>'
+      + '<p class="mt-2 text-xs text-gray-400">Non vedi l&#39;opzione? Prova ad aprire la pagina in Chrome.</p>';
+    document.getElementById('install-modal').classList.remove('hidden');
+    return;
+  }
+
+  // Desktop o altri browser
+  document.getElementById('modal-titolo').textContent = "Installa l’app";
+  document.getElementById('modal-corpo').innerHTML =
+    '<p>Per installare Mercatini come app:</p>'
+    + '<ul class="list-disc ml-4 mt-1 space-y-1">'
+    + '<li><strong>Chrome/Edge:</strong> clicca l&#39;icona &#8855; nella barra degli indirizzi</li>'
+    + '<li><strong>Smartphone:</strong> apri mercatini.blog su Chrome (Android) o Safari (iOS)</li>'
+    + '</ul>';
+  document.getElementById('install-modal').classList.remove('hidden');
+}
+
+function chiudiModale() {
+  document.getElementById('install-modal').classList.add('hidden');
+}
+
+// Web Share / Condividi
+function condividi() {
+  var data = {
+    title: 'Mercatini Artigianali in Italia',
+    text: 'Scopri i mercatini artigianali vicino a te!',
+    url: 'https://mercatini.blog'
+  };
+  if (navigator.share) {
+    navigator.share(data).catch(function() {});
+  } else {
+    navigator.clipboard.writeText(data.url).then(function() {
+      showToast('Link copiato!');
+    }).catch(function() {
+      showToast('https://mercatini.blog');
+    });
+  }
+}
+
+// Toast
+function showToast(msg, ms) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(function() { t.classList.add('hidden'); }, ms || 3000);
+}
+</script>
+{% endblock %}
 {% endblock %}

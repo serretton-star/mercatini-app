@@ -18,11 +18,8 @@
   <!-- Finestra messaggi -->
   <div id="chat-messages"
        class="flex-1 overflow-y-auto bg-warm rounded-xl border border-gray-200 p-4 space-y-3">
-    <!-- Messaggio benvenuto -->
     <div class="flex gap-2">
-      <div class="w-7 h-7 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">
-        AI
-      </div>
+      <div class="w-7 h-7 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">AI</div>
       <div class="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 text-sm text-gray-700 shadow-sm max-w-xs">
         Ciao! Sono l'assistente di Mercatini App. Posso aiutarti a trovare mercatini
         per città, data, tipo di prodotti e molto altro. Come posso aiutarti?
@@ -32,9 +29,7 @@
 
   <!-- Input -->
   <div class="mt-3 flex gap-2">
-    <input id="chat-input"
-           type="text"
-           maxlength="1000"
+    <input id="chat-input" type="text" maxlength="1000"
            placeholder="Es: mercatini di artigianato a Bologna questo weekend…"
            class="flex-1 px-4 py-2.5 border border-gray-300 rounded-full text-sm
                   focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -44,8 +39,7 @@
                    text-sm font-semibold transition-colors flex items-center gap-1.5">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
       </svg>
       Invia
     </button>
@@ -61,15 +55,17 @@ const inputEl    = document.getElementById('chat-input');
 const btnSend    = document.getElementById('btn-send');
 const btnReset   = document.getElementById('btn-reset');
 
-function scrollBottom() {
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function addBubble(role, text) {
   const isUser = role === 'user';
   const wrap = document.createElement('div');
   wrap.className = 'flex gap-2' + (isUser ? ' justify-end' : '');
-
   if (!isUser) {
     wrap.innerHTML = `
       <div class="w-7 h-7 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">AI</div>
@@ -79,6 +75,85 @@ function addBubble(role, text) {
       <div class="bg-primary text-white rounded-2xl rounded-tr-none px-4 py-2.5 text-sm max-w-xs whitespace-pre-wrap">${escHtml(text)}</div>`;
   }
   messagesEl.appendChild(wrap);
+  scrollBottom();
+}
+
+function addMercatiniCards(mercatini) {
+  if (!mercatini || mercatini.length === 0) return;
+  const container = document.createElement('div');
+  container.className = 'ml-9 space-y-2';
+
+  mercatini.forEach(m => {
+    const hasPhone = m.telefono && m.telefono.trim() !== '';
+    const hasEmail = m.email && m.email.trim() !== '';
+    const location = [m.indirizzo, m.citta, m.provincia ? `(${m.provincia})` : '', m.regione]
+                     .filter(Boolean).join(' ');
+
+    let dateStr = m.d_ini;
+    if (m.d_fin && m.d_fin !== m.d_ini) dateStr += ` – ${m.d_fin}`;
+
+    let btns = '';
+    if (hasPhone) {
+      btns += `<a href="https://wa.me/${escHtml(m.tel_wa)}" target="_blank" rel="noopener"
+                  class="inline-flex items-center gap-1 text-xs bg-green-500 hover:bg-green-600
+                         text-white px-2.5 py-1 rounded-full transition-colors">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15
+                           -.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463
+                           -2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606
+                           .134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371
+                           -.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51
+                           -.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016
+                           -1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487
+                           .709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719
+                           2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.555 4.122 1.523 5.855L0 24l6.29-1.49
+                           A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22
+                           c-1.848 0-3.584-.49-5.086-1.348l-.364-.216-3.734.884.916-3.636-.237-.375
+                           A9.951 9.951 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                </svg>
+                WhatsApp
+              </a>`;
+    }
+    if (hasEmail) {
+      btns += `<a href="mailto:${escHtml(m.email)}"
+                  class="inline-flex items-center gap-1 text-xs bg-blue-500 hover:bg-blue-600
+                         text-white px-2.5 py-1 rounded-full transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Email
+              </a>`;
+    }
+    btns += `<a href="${escHtml(m.maps_url)}" target="_blank" rel="noopener"
+                class="inline-flex items-center gap-1 text-xs bg-orange-500 hover:bg-orange-600
+                       text-white px-2.5 py-1 rounded-full transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243
+                         a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Maps
+            </a>`;
+
+    const card = document.createElement('div');
+    card.className = 'bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm';
+    card.innerHTML = `
+      <a href="/mercatini/${m.id}" class="block group">
+        <div class="flex items-start justify-between gap-1">
+          <p class="text-sm font-semibold text-secondary group-hover:text-primary transition-colors">${escHtml(m.titolo)}</p>
+          ${m.voto ? `<span class="shrink-0 text-xs text-yellow-500 font-medium">★ ${m.voto}</span>` : ''}
+        </div>
+        <p class="text-xs text-gray-500 mt-0.5 truncate">📍 ${escHtml(location)}</p>
+        <p class="text-xs text-primary font-medium mt-0.5">📅 ${escHtml(dateStr)}${m.meteo ? ` · ${m.meteo.temp}°C ${escHtml(m.meteo.desc)}` : ''}</p>
+      </a>
+      <div class="flex flex-wrap gap-1.5 mt-2">${btns}</div>`;
+    container.appendChild(card);
+  });
+
+  messagesEl.appendChild(container);
   scrollBottom();
 }
 
@@ -96,11 +171,6 @@ function addTyping() {
 function removeTyping() {
   const el = document.getElementById('typing');
   if (el) el.remove();
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 async function sendMessage() {
@@ -124,6 +194,7 @@ async function sendMessage() {
       addBubble('assistant', '⚠️ ' + data.error);
     } else {
       addBubble('assistant', data.reply);
+      addMercatiniCards(data.mercatini);
     }
   } catch (e) {
     removeTyping();

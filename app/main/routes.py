@@ -4,52 +4,52 @@ from app.models import Mercatino
 from app.main import main
 
 
+@main.route('/sw.js')
+def service_worker():
+    import os
+    from flask import send_from_directory, make_response, current_app
+    static_dir = os.path.join(current_app.root_path, 'static')
+    resp = make_response(send_from_directory(static_dir, 'sw.js'))
+    resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Expires'] = '0'
+    resp.headers['Content-Type'] = 'application/javascript'
+    return resp
+
+
 @main.route('/')
 def index():
     oggi = date.today()
-
     in_corso = (
         Mercatino.query
-        .filter(
-            Mercatino.pubblicato == True,
-            Mercatino.data_inizio <= oggi,
-            Mercatino.data_fine >= oggi,
-        )
-        .order_by(Mercatino.data_fine.asc())
-        .limit(3)
-        .all()
+        .filter(Mercatino.pubblicato == True,
+                Mercatino.data_inizio <= oggi,
+                Mercatino.data_fine >= oggi)
+        .order_by(Mercatino.data_fine.asc()).limit(3).all()
     )
-
     prossimi = (
         Mercatino.query
-        .filter(
-            Mercatino.pubblicato == True,
-            Mercatino.data_inizio > oggi,
-        )
-        .order_by(Mercatino.data_inizio.asc())
-        .limit(6)
-        .all()
+        .filter(Mercatino.pubblicato == True,
+                Mercatino.data_inizio > oggi)
+        .order_by(Mercatino.data_inizio.asc()).limit(6).all()
     )
-
     totale = Mercatino.query.filter_by(pubblicato=True).count()
+    return render_template('main/index.html',
+                           in_corso=in_corso, prossimi=prossimi, totale=totale)
 
-    return render_template(
-        'main/index.html',
-        in_corso=in_corso,
-        prossimi=prossimi,
-        totale=totale,
-    )
+
+@main.route('/privacy')
+def privacy():
+    return render_template('main/privacy.html')
 
 
 @main.app_errorhandler(403)
 def forbidden(e):
     return render_template('errors/403.html'), 403
 
-
 @main.app_errorhandler(404)
 def not_found(e):
     return render_template('errors/404.html'), 404
-
 
 @main.app_errorhandler(500)
 def server_error(e):

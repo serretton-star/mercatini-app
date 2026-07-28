@@ -1,0 +1,156 @@
+{%- extends 'base.html' -%}
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6 pb-10">
+
+  <div class="text-center pt-4 pb-2">
+    <h1 class="text-2xl font-bold text-secondary">Privacy Policy</h1>
+    <p class="text-sm text-gray-400 mt-1">Ultimo aggiornamento: luglio 2025</p>
+  </div>
+
+  <div class="bg-orange-50 border border-orange-100 rounded-xl p-4">
+    <p class="text-sm text-gray-700">
+      Mercatini App (<strong>mercatini.blog</strong>) tratta i tuoi dati personali nel rispetto
+      del <strong>Regolamento (UE) 2016/679 (GDPR)</strong> e del D.Lgs. 196/2003.
+      Questa pagina spiega quali dati raccogliamo, perch&eacute; e i tuoi diritti.
+    </p>
+  </div>
+
+  <!-- 1 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">1. Titolare del trattamento</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2">
+        <span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Titolare: Mercatini App, contattabile via email:
+          <a href="mailto:privacy@mercatini.blog" class="text-primary hover:underline">privacy@mercatini.blog</a>.
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 2 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">2. Dati raccolti</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Dati di registrazione</strong>: nome, cognome, email, password (hash), provincia di residenza.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Dati di utilizzo</strong>: mercatini inseriti, preferenze notifiche, timestamp di accesso.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Dati tecnici</strong>: indirizzo IP, browser, sistema operativo (log Nginx &mdash; conservati 30 giorni).</span></li>
+    </ul>
+  </section>
+
+  <!-- 3 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">3. Finalit&agrave; e base giuridica</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Erogazione del servizio</strong> (Art. 6(1)(b) GDPR): registrazione, login, gestione mercatini.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Notifiche e-mail</strong> (Art. 6(1)(a) GDPR &mdash; consenso): email sulla tua provincia, solo con consenso esplicito.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Sicurezza</strong> (Art. 6(1)(f) GDPR &mdash; interesse legittimo): log, rate limiting, Fail2ban.</span></li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">4. Notifiche e-mail</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Se hai selezionato la casella &ldquo;Acconsento a ricevere notifiche&rdquo;, ti invieremo email sui mercatini nella tua provincia.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Puoi revocare il consenso in qualsiasi momento da <strong>Il mio account &rarr; Notifiche</strong>
+          o scrivendo a <a href="mailto:privacy@mercatini.blog" class="text-primary hover:underline">privacy@mercatini.blog</a>.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>La revoca non pregiudica la legittimit&agrave; del trattamento svolto prima della revoca.</span></li>
+    </ul>
+  </section>
+
+  <!-- 5 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">5. Conservazione dei dati</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>I dati di account vengono conservati finch&eacute; il tuo account &egrave; attivo.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>In caso di cancellazione, i dati vengono eliminati entro 30 giorni.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>I log tecnici (IP, accessi) vengono conservati 30 giorni.</span></li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">6. Destinatari</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>I dati non vengono venduti n&eacute; ceduti a terzi per scopi commerciali.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Provider infrastruttura: OVH SAS (server VPS, UE &mdash; conforme GDPR).</span></li>
+    </ul>
+  </section>
+
+  <!-- 7 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">7. Trasferimenti internazionali</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>I dati sono trattati su server UE (OVH, datacenter FR/DE). Nessun trasferimento verso paesi extra-UE.</span></li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">8. I tuoi diritti (Art. 15&ndash;22 GDPR)</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Accesso</strong>: sapere quali dati abbiamo su di te.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Rettifica</strong>: correggere dati inesatti.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Cancellazione</strong>: chiedere la rimozione dei tuoi dati.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Portabilit&agrave;</strong>: ricevere i tuoi dati in formato leggibile da macchina.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span><strong>Revoca del consenso</strong>: in qualsiasi momento senza conseguenze sul servizio di base.</span></li>
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Scrivi a <a href="mailto:privacy@mercatini.blog" class="text-primary hover:underline">privacy@mercatini.blog</a>. Risponderemo entro 30 giorni.</span></li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">9. Reclami</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Hai il diritto di proporre reclamo al Garante:
+          <a href="https://www.garanteprivacy.it" target="_blank" rel="noopener" class="text-primary hover:underline">garanteprivacy.it</a>.
+        </span></li>
+    </ul>
+  </section>
+
+  <!-- 10 -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">10. Cookie</h2>
+    <ul class="space-y-2">
+      <li class="text-sm text-gray-600 flex gap-2"><span class="text-primary flex-shrink-0">&bull;</span>
+        <span>Utilizziamo esclusivamente un cookie di sessione tecnico (necessario per il login) e un cookie CSRF per la sicurezza dei moduli. Non utilizziamo cookie di profilazione o di terze parti.</span></li>
+    </ul>
+  </section>
+
+  {% if current_user.is_authenticated %}
+  <div class="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
+    <p class="text-sm text-gray-600 mb-3">Gestisci le tue preferenze di notifica dal tuo account.</p>
+    <a href="{{ url_for('account.profilo') }}"
+       class="inline-block bg-primary text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+      Vai al mio account
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

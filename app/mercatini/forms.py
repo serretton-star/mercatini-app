@@ -81,7 +81,7 @@ class MercatinoForm(FlaskForm):
         coerce=int,
         validators=[Optional()]
     )
-    pubblicato = BooleanField('Pubblica subito')
+    pubblicato = BooleanField('Salva come bozza')
 
     def validate_data_fine(self, field):
         if self.data_inizio.data and field.data:

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{%- extends 'base.html' -%}
 
 {% macro field(f, placeholder='', type='text', autocomplete='') %}
 <div class="mb-4">
@@ -21,7 +21,7 @@
 <div class="max-w-sm mx-auto mt-4">
   <h1 class="text-2xl font-bold text-secondary mb-1">Registrati</h1>
   <p class="text-sm text-gray-500 mb-6">
-    Già registrato?
+    Gia registrato?
     <a href="{{ url_for('auth.login') }}" class="text-primary font-medium hover:underline">
       Accedi
     </a>
@@ -39,13 +39,67 @@
     {{ field(form.password, placeholder='Minimo 8 caratteri', type='password', autocomplete='new-password') }}
     {{ field(form.password2, placeholder='Ripeti la password', type='password', autocomplete='new-password') }}
 
+    <!-- Provincia residenza -->
+    <div class="mb-4">
+      {{ form.provincia_residenza.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+      <select name="{{ form.provincia_residenza.name }}"
+              id="{{ form.provincia_residenza.id }}"
+              class="w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none
+                     focus:ring-2 focus:ring-primary focus:border-transparent
+                     {{ 'border-red-400' if form.provincia_residenza.errors else 'border-gray-300' }}">
+        {% for val, label in form.provincia_residenza.choices %}
+          <option value="{{ val }}" {% if form.provincia_residenza.data == val %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+      <p class="text-xs text-gray-400 mt-1">Opzionale &mdash; per ricevere notifiche sui mercatini vicino a te.</p>
+      {% for e in form.provincia_residenza.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ e }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Profilo espositore -->
+    <div class="mb-4">
+      <p class="block text-sm font-medium text-gray-700 mb-2">Profilo espositore <span class="text-gray-400 font-normal">(opzionale)</span></p>
+      <div class="grid grid-cols-1 gap-3">
+        <div>
+          <label for="{{ form.categoria_prodotti.id }}" class="block text-xs text-gray-500 mb-1">Cosa vendi principalmente?</label>
+          <select name="{{ form.categoria_prodotti.name }}" id="{{ form.categoria_prodotti.id }}"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            {% for val, label in form.categoria_prodotti.choices %}
+            <option value="{{ val }}" {% if form.categoria_prodotti.data == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="{{ form.fascia_prezzo.id }}" class="block text-xs text-gray-500 mb-1">Fascia di prezzo media dei tuoi prodotti</label>
+          <select name="{{ form.fascia_prezzo.name }}" id="{{ form.fascia_prezzo.id }}"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            {% for val, label in form.fascia_prezzo.choices %}
+            <option value="{{ val }}" {% if form.fascia_prezzo.data == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-1">Aiuta altri espositori a trovare i mercatini giusti.</p>
+    </div>
+
+    <!-- Notifiche email -->
+    <div class="mb-4">
+      <label class="flex items-center gap-2 cursor-pointer">
+        {{ form.notifiche_email(class="h-4 w-4 text-primary border-gray-300 rounded flex-shrink-0") }}
+        <span class="text-sm text-gray-600">{{ form.notifiche_email.label.text }}</span>
+      </label>
+    </div>
+
     <!-- Privacy -->
     <div class="mb-6 p-3 bg-warm-dark rounded-lg border border-gray-200">
       <label class="flex items-start gap-2 cursor-pointer">
         {{ form.consenso_privacy(class="mt-0.5 h-4 w-4 text-primary border-gray-300 rounded flex-shrink-0") }}
         <span class="text-xs text-gray-600">
           Ho letto e accetto la
-          <a href="#" class="text-primary hover:underline">Privacy Policy</a>.
+          <a href="{{ url_for('main.privacy') }}" target="_blank" class="text-primary hover:underline">Privacy Policy</a>.
           I tuoi dati sono trattati per fornire il servizio (Art. 6(1)(b) GDPR).
         </span>
       </label>

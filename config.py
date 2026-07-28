@@ -30,6 +30,8 @@ class Config:
     # Anthropic Chat AI
     ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
     ANTHROPIC_MODEL   = os.environ.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
+    # OpenWeatherMap
+    OPENWEATHER_API_KEY = os.environ.get('OPENWEATHER_API_KEY', '')
 
 
 class DevelopmentConfig(Config):

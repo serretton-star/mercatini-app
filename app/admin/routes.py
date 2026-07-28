@@ -2,7 +2,7 @@ from functools import wraps
 from flask import render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Mercatino, Categoria
+from app.models import User, Mercatino, Categoria, Recensione
 from app.admin import admin
 
 
@@ -24,7 +24,18 @@ def dashboard():
         'mercatini': Mercatino.query.count(),
         'pubblicati': Mercatino.query.filter_by(pubblicato=True).count(),
         'bozze': Mercatino.query.filter_by(pubblicato=False).count(),
+        'recensioni_da_approvare': Recensione.query.filter_by(approvata=False).count(),
+        'bozze_crawler': Mercatino.query.filter(
+            Mercatino.pubblicato == False,
+            Mercatino.fonte_crawler.isnot(None)
+        ).count(),
     }
+    recensioni_pending = (
+        Recensione.query
+        .filter_by(approvata=False)
+        .order_by(Recensione.created_at.desc())
+        .all()
+    )
     mercatini = (
         Mercatino.query
         .order_by(Mercatino.created_at.desc())
@@ -32,6 +43,12 @@ def dashboard():
         .all()
     )
     utenti = User.query.order_by(User.created_at.desc()).all()
+    bozze_crawler = (
+        Mercatino.query
+        .filter(Mercatino.pubblicato == False, Mercatino.fonte_crawler.isnot(None))
+        .order_by(Mercatino.created_at.desc())
+        .all()
+    )
     categorie = Categoria.query.order_by(Categoria.nome).all()
     return render_template(
         'admin/dashboard.html',
@@ -39,6 +56,8 @@ def dashboard():
         mercatini=mercatini,
         utenti=utenti,
         categorie=categorie,
+        recensioni_pending=recensioni_pending,
+        bozze_crawler=bozze_crawler,
     )
 
 
@@ -115,3 +134,54 @@ def elimina_categoria(id):
     db.session.commit()
     flash(f'Categoria "{nome}" eliminata.', 'success')
     return redirect(url_for('admin.dashboard'))
+
+
+# ------------------------------------------------------------------
+# Gestione Recensioni
+# ------------------------------------------------------------------
+@admin.route('/recensione/<int:id>/approva', methods=['POST'])
+@login_required
+@admin_required
+def approva_recensione(id):
+    r = Recensione.query.get_or_404(id)
+    r.approvata = True
+    db.session.commit()
+    flash(f'Recensione approvata.', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+@admin.route('/recensione/<int:id>/rifiuta', methods=['POST'])
+@login_required
+@admin_required
+def rifiuta_recensione(id):
+    r = Recensione.query.get_or_404(id)
+    db.session.delete(r)
+    db.session.commit()
+    flash('Recensione rifiutata ed eliminata.', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+# ------------------------------------------------------------------
+# Gestione Bozze Crawler
+# ------------------------------------------------------------------
+@admin.route('/bozza/<int:id>/pubblica', methods=['POST'])
+@login_required
+@admin_required
+def pubblica_bozza(id):
+    m = Mercatino.query.get_or_404(id)
+    m.pubblicato = True
+    db.session.commit()
+    flash(f'"{m.titolo}" pubblicato!', 'success')
+    return redirect(url_for('admin.dashboard') + '#bozze-crawler')
+
+
+@admin.route('/bozza/<int:id>/elimina', methods=['POST'])
+@login_required
+@admin_required
+def elimina_bozza(id):
+    m = Mercatino.query.get_or_404(id)
+    titolo = m.titolo
+    db.session.delete(m)
+    db.session.commit()
+    flash(f'Bozza "{titolo}" eliminata.', 'success')
+    return redirect(url_for('admin.dashboard') + '#bozze-crawler')

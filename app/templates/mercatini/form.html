@@ -154,8 +154,31 @@
         <span class="text-sm font-medium text-secondary">{{ form.pubblicato.label.text }}</span>
       </label>
       <p class="text-xs text-gray-400 mt-1 ml-6">
-        Se non pubblicato, il mercatino sarà visibile solo a te.
+        Se spuntato, il mercatino sarà salvato come bozza (visibile solo a te).
       </p>
+    </div>
+
+
+    <!-- Avviso duplicati -->
+    <div id="dup-warning" class="hidden rounded-xl border border-orange-300 bg-orange-50 p-4">
+      <div class="flex items-start gap-2 mb-3">
+        <span class="text-lg">&#9888;</span>
+        <div>
+          <p class="font-semibold text-sm text-orange-800">Evento simile gi&#224; presente</p>
+          <p class="text-xs text-orange-700 mt-0.5">Abbiamo trovato mercatini simili nel database:</p>
+        </div>
+      </div>
+      <div id="dup-list" class="space-y-2 mb-3"></div>
+      <div class="flex gap-2">
+        <button type="button" onclick="submitAnyway()"
+          class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 rounded-lg transition-colors">
+          Inserisci comunque
+        </button>
+        <button type="button" onclick="hideDupWarning()"
+          class="flex-1 border border-orange-300 text-orange-700 text-sm font-medium py-2 rounded-lg hover:bg-orange-100 transition-colors">
+          Annulla
+        </button>
+      </div>
     </div>
 
     <!-- Bottoni -->
@@ -224,9 +247,26 @@ async function estraiDati(){
 function showPicker(eventi){
   var container=document.getElementById('ai-picker');
   container.innerHTML='';
+  // Bottone Carica tutti
+  if(eventi.length > 1){
+    var batchRow=document.createElement('div');
+    batchRow.className='mb-3';
+    var btnBatch=document.createElement('button');
+    btnBatch.type='button';
+    btnBatch.id='btn-carica-tutti';
+    btnBatch.className='w-full bg-primary hover:bg-amber-600 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-colors';
+    btnBatch.textContent='Carica tutti (' + eventi.length + ') come bozze';
+    btnBatch.addEventListener('click', function(){ caricaTutti(eventi, btnBatch); });
+    batchRow.appendChild(btnBatch);
+    var hint=document.createElement('p');
+    hint.className='text-xs text-gray-400 mt-1 text-center';
+    hint.textContent='Le bozze vengono salvate non pubblicate: potrai rivederle e pubblicarle.';
+    batchRow.appendChild(hint);
+    container.appendChild(batchRow);
+  }
   var title=document.createElement('p');
   title.className='text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2';
-  title.textContent='Scegli l\'evento da inserire:';
+  title.textContent='Oppure scegli un singolo evento:';
   container.appendChild(title);
   eventi.forEach(function(ev,i){
     var card=document.createElement('div');
@@ -260,6 +300,54 @@ function hidePicker(){
   if(c){c.classList.add('hidden');c.innerHTML='';}
 }
 
+async function caricaTutti(eventi, btn){
+  btn.disabled=true;
+  btn.textContent='Salvataggio in corso...';
+  try {
+    var csrfEl = document.querySelector('[name=csrf_token]');
+    var csrf = csrfEl ? csrfEl.value : '';
+    var res = await fetch('/mercatini/ai-crea-batch', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-CSRFToken': csrf},
+      body: JSON.stringify({eventi: eventi})
+    });
+    var j = await res.json();
+    if(!res.ok || !j.ok){ throw new Error(j.error||'Errore server'); }
+    var container = document.getElementById('ai-picker');
+    container.innerHTML = '';
+    var box = document.createElement('div');
+    box.className = 'bg-green-50 border border-green-200 rounded-lg p-4';
+    var titoloBatch = document.createElement('p');
+    titoloBatch.className = 'font-semibold text-green-700 mb-2';
+    titoloBatch.textContent = j.creati.length + ' bozze salvate con successo!';
+    box.appendChild(titoloBatch);
+    j.creati.forEach(function(item){
+      var a = document.createElement('a');
+      a.href = '/mercatini/' + item.id + '/modifica';
+      a.target = '_blank';
+      a.className = 'block text-sm text-primary hover:underline mb-1';
+      a.textContent = item.titolo||('Mercatino #'+item.id);
+      box.appendChild(a);
+    });
+    if(j.errori && j.errori.length){
+      var errP = document.createElement('p');
+      errP.className = 'text-xs text-red-500 mt-2';
+      errP.textContent = j.errori.length + ' non salvati: ' + j.errori.map(function(e){return e.titolo;}).join(', ');
+      box.appendChild(errP);
+    }
+    var linkLista = document.createElement('a');
+    linkLista.href = '/mercatini/lista';
+    linkLista.className = 'inline-block mt-3 text-xs bg-secondary text-white rounded px-3 py-1 hover:opacity-90';
+    linkLista.textContent = 'Vai alla lista mercatini';
+    box.appendChild(linkLista);
+    container.appendChild(box);
+  } catch(e) {
+    btn.disabled=false;
+    btn.textContent='Carica tutti (' + eventi.length + ') come bozze';
+    showMsg('Errore: ' + e.message, 'text-red-500');
+  }
+}
+
 function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -278,6 +366,47 @@ function fillForm(d){
   if(d.prezzo_ingresso)s('prezzo_ingresso',String(d.prezzo_ingresso));
   var cb=document.getElementById('ingresso_gratuito');
   if(cb&&d.ingresso_gratuito!=null)cb.checked=d.ingresso_gratuito;
+  // Dopo fill: lookup geo se regione/provincia mancanti
+  var regEl=document.getElementById('regione');
+  var prvEl=document.getElementById('provincia');
+  var citEl=document.getElementById('citta');
+  if(citEl && citEl.value && (!(regEl&&regEl.value) || !(prvEl&&prvEl.value))){
+    lookupGeo(citEl.value, regEl, prvEl);
+  }
+}
+
+async function lookupGeo(citta, regEl, prvEl){
+  if(!citta) return;
+  try{
+    var r = await fetch('/mercatini/lookup-citta?citta='+encodeURIComponent(citta), {
+      headers: {'X-CSRFToken': (document.querySelector('meta[name="csrf-token"]')||{}).content||''}
+    });
+    var j = await r.json();
+    if(j.trovato){
+      if(regEl && j.regione && !regEl.value) regEl.value = j.regione;
+      if(prvEl && j.provincia && !prvEl.value) prvEl.value = j.provincia;
+      // Evidenzia campi compilati automaticamente
+      [regEl,prvEl].forEach(function(el){
+        if(el&&el.value){
+          el.style.borderColor='#f59e0b';
+          setTimeout(function(){el.style.borderColor='';},3000);
+        }
+      });
+    } else {
+      // Non trovato: evidenzia in arancione e chiedi all'utente
+      var missing = [];
+      if(regEl && !regEl.value){regEl.style.borderColor='#ef4444'; missing.push('regione');}
+      if(prvEl && !prvEl.value){prvEl.style.borderColor='#ef4444'; missing.push('provincia (sigla es. MI)');}
+      if(missing.length){
+        var ai_msg=document.getElementById('ai-msg');
+        ai_msg.textContent='Non riesco a trovare '+missing.join(' e ')+' per "'+citta+'". Inseriscili manualmente.';
+        ai_msg.className='text-xs text-center mt-1 text-orange-600';
+        ai_msg.classList.remove('hidden');
+        // Scroll al primo campo mancante
+        (regEl&&!regEl.value?regEl:prvEl).scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    }
+  } catch(e){ /* silenzioso */ }
 }
 
 /* Paste Ctrl+V screenshot */
@@ -316,5 +445,60 @@ const box=document.getElementById('prezzo_box');
 function toggle(){box.classList.toggle('hidden',cb.checked);}
 cb.addEventListener('change',toggle);
 toggle();
+
+/* Controllo duplicati prima del submit */
+var IS_EDIT = {% if mercatino is defined %}true{% else %}false{% endif %};
+var _forceSubmit = false;
+
+document.querySelector('button[type="submit"]').addEventListener('click', async function(e){
+  if(IS_EDIT || _forceSubmit) return;
+  var titolo = (document.getElementById('titolo').value||'').trim();
+  var citta  = (document.getElementById('citta').value||'').trim();
+  var data_i = (document.getElementById('data_inizio').value||'').trim();
+  if(!titolo && !citta) return;
+  e.preventDefault();
+  try{
+    var params = new URLSearchParams({titolo:titolo, citta:citta, data_inizio:data_i});
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var headers = csrfMeta ? {'X-CSRFToken': csrfMeta.content} : {};
+    var r = await fetch('/mercatini/check-duplicato?' + params.toString(), {headers:headers});
+    var j = await r.json();
+    if(j.duplicati && j.duplicati.length > 0){
+      showDupWarning(j.duplicati);
+    } else {
+      _forceSubmit = true;
+      e.target.closest('form').submit();
+    }
+  } catch(err){
+    _forceSubmit = true;
+    e.target.closest('form').submit();
+  }
+});
+
+function showDupWarning(dups){
+  var list = document.getElementById('dup-list');
+  list.innerHTML = '';
+  dups.forEach(function(d){
+    var div = document.createElement('div');
+    div.className = 'bg-white rounded-lg border border-orange-200 p-2.5';
+    var date = [d.data_inizio, d.data_fine].filter(Boolean).join(' &#8594; ') || '&#8212;';
+    div.innerHTML = '<a href="/mercatini/'+escHtml(String(d.id))+'" target="_blank" '
+      +'class="font-semibold text-sm text-orange-900 hover:underline">'+escHtml(d.titolo)+'</a>'
+      +'<p class="text-xs text-gray-500 mt-0.5">'+escHtml(d.citta||'&#8212;')+' &bull; '+date+'</p>';
+    list.appendChild(div);
+  });
+  document.getElementById('dup-warning').classList.remove('hidden');
+  document.getElementById('dup-warning').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function hideDupWarning(){
+  document.getElementById('dup-warning').classList.add('hidden');
+}
+
+function submitAnyway(){
+  hideDupWarning();
+  _forceSubmit = true;
+  document.querySelector('form').submit();
+}
 </script>
 {% endblock %}

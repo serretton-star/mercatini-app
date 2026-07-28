@@ -54,6 +54,31 @@
       </div>
     </div>
 
+    <!-- Provincia -->
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Provincia</label>
+      <input type="text" name="provincia" value="{{ filtro_provincia }}"
+             placeholder="es. MI, Roma, Torino..."
+             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-primary/30">
+    </div>
+
+    <!-- Date (intervallo) -->
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Dal</label>
+        <input type="date" name="data_dal" value="{{ filtro_data_dal }}"
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-primary/30">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Al</label>
+        <input type="date" name="data_al" value="{{ filtro_data_al }}"
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-primary/30">
+      </div>
+    </div>
+
     {% if categorie %}
     <div>
       <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
@@ -76,7 +101,7 @@
                      hover:bg-secondary-light transition-colors">
         Cerca
       </button>
-      {% if filtro_q or filtro_regione or filtro_citta or filtro_cat %}
+      {% if filtro_q or filtro_regione or filtro_citta or filtro_cat or filtro_provincia or filtro_data_dal or filtro_data_al %}
       <a href="{{ url_for('mercatini.index') }}"
          class="px-4 py-2 border border-gray-200 text-gray-500 text-sm rounded-lg
                 hover:bg-gray-50 transition-colors">
@@ -129,7 +154,8 @@
   <div class="flex justify-center gap-2">
     {% if pagination.has_prev %}
     <a href="{{ url_for('mercatini.index', page=pagination.prev_num, q=filtro_q,
-               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat) }}"
+               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat,
+               provincia=filtro_provincia, data_dal=filtro_data_dal, data_al=filtro_data_al) }}"
        class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">← Prec</a>
     {% endif %}
     <span class="px-3 py-1.5 text-sm text-gray-500">
@@ -137,7 +163,8 @@
     </span>
     {% if pagination.has_next %}
     <a href="{{ url_for('mercatini.index', page=pagination.next_num, q=filtro_q,
-               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat) }}"
+               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat,
+               provincia=filtro_provincia, data_dal=filtro_data_dal, data_al=filtro_data_al) }}"
        class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">Succ →</a>
     {% endif %}
   </div>
@@ -147,7 +174,7 @@
   <!-- Empty state -->
   <div class="text-center py-16 text-gray-400">
     <p class="text-4xl mb-3">🔍</p>
-    {% if filtro_q or filtro_regione or filtro_citta or filtro_cat %}
+    {% if filtro_q or filtro_regione or filtro_citta or filtro_cat or filtro_provincia or filtro_data_dal or filtro_data_al %}
     <p class="font-medium">Nessun risultato per i filtri applicati.</p>
     <a href="{{ url_for('mercatini.index') }}"
        class="inline-block mt-3 text-primary text-sm hover:underline">

@@ -1,12 +1,155 @@
 {% extends 'base.html' %}
-{% block title %}{{ mercatino.titolo }}{% endblock %}
+{% block title %}{{ mercatino.titolo }}
+<script>
+// Star rating interattivo
+document.querySelectorAll('.star-label').forEach((lbl, idx, all) => {
+  lbl.addEventListener('mouseenter', () => {
+    all.forEach((l, i) => l.classList.toggle('text-yellow-400', i <= idx));
+    all.forEach((l, i) => l.classList.toggle('text-gray-300', i > idx));
+  });
+  lbl.addEventListener('click', () => {
+    lbl.querySelector('input').checked = true;
+    all.forEach((l, i) => l.classList.toggle('text-yellow-400', i <= idx));
+    all.forEach((l, i) => l.classList.toggle('text-gray-300', i > idx));
+  });
+});
+document.getElementById('star-rating')?.addEventListener('mouseleave', () => {
+  const checked = document.querySelector('#star-rating input:checked');
+  const val = checked ? parseInt(checked.value) - 1 : -1;
+  document.querySelectorAll('.star-label').forEach((l, i) => {
+    l.classList.toggle('text-yellow-400', i <= val);
+    l.classList.toggle('text-gray-300', i > val);
+  });
+});
+
+// Toggle preferito
+const btnPref = document.getElementById('btn-preferito');
+if (btnPref) {
+  btnPref.addEventListener('click', async () => {
+    const id = btnPref.dataset.id;
+    const res = await fetch(`/account/preferiti/toggle/${id}`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''}
+    });
+    const data = await res.json();
+    const icon = document.getElementById('pref-icon');
+    const label = document.getElementById('pref-label');
+    if (data.salvato) {
+      icon.textContent = '❤️'; label.textContent = 'Salvato';
+      btnPref.classList.add('bg-red-50','border-red-300','text-red-500');
+    } else {
+      icon.textContent = '🤍'; label.textContent = 'Salva';
+      btnPref.classList.remove('bg-red-50','border-red-300','text-red-500');
+    }
+  });
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="space-y-5">
 
   <!-- Breadcrumb -->
   <nav class="text-sm text-gray-400">
-    <a href="{{ url_for('mercatini.index') }}" class="hover:text-primary">Mercatini</a>
+    <!-- Meteo (solo se evento entro 7 giorni) -->
+  {% if meteo %}
+  <div class="bg-white rounded-xl shadow-sm p-4">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🌤 Previsioni meteo</p>
+    <div class="flex gap-3 overflow-x-auto pb-1">
+      {% for giorno in meteo %}
+      <div class="shrink-0 text-center bg-warm rounded-lg px-3 py-2 min-w-[70px]">
+        <p class="text-xs text-gray-500 font-medium">{{ giorno.data }}</p>
+        <p class="text-xl my-1">{{ giorno.icona }}</p>
+        <p class="text-sm font-bold text-secondary">{{ giorno.temp }}°C</p>
+        <p class="text-xs text-gray-400">{{ giorno.desc }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="text-xs text-gray-400 mt-2">Previsioni indicative — dati OpenWeatherMap</p>
+  </div>
+  {% endif %}
+
+  <!-- Recensioni -->
+  <div class="bg-white rounded-xl shadow-sm p-5 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold text-secondary">Recensioni</h2>
+      {% if mercatino.num_recensioni > 0 %}
+      <div class="flex items-center gap-1.5">
+        <span class="text-yellow-400">★</span>
+        <span class="font-bold text-secondary">{{ mercatino.voto_medio }}</span>
+        <span class="text-xs text-gray-400">({{ mercatino.num_recensioni }})</span>
+      </div>
+      {% endif %}
+    </div>
+
+    {% set recens_approvate = mercatino.recensioni | selectattr('approvata') | list %}
+    {% if recens_approvate %}
+    <div class="space-y-3">
+      {% for r in recens_approvate %}
+      <div class="border-b border-gray-100 pb-3 last:border-0">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex gap-0.5">
+            {% for i in range(1, 6) %}
+            <span class="{{ 'text-yellow-400' if i <= r.voto else 'text-gray-200' }}">★</span>
+            {% endfor %}
+          </div>
+          <span class="text-xs text-gray-400 flex flex-wrap items-center gap-1">
+            {% if r.utente.categoria_prodotti %}
+            <span class="bg-warm-dark text-secondary px-1.5 py-0.5 rounded-full text-xs font-medium">
+              🏪 {{ {'artigianato':'Artigianato','vintage':'Vintage','usato':'Usato','cibo':'Cibo & Bev.','gioielli':'Gioielli','abbigliamento':'Abbigliamento','ceramica':'Ceramica','decorazioni':'Decorazioni','libri':'Libri','arte':'Arte','piante':'Piante','giocattoli':'Giocattoli','altro':'Altro'}.get(r.utente.categoria_prodotti, r.utente.categoria_prodotti) }}
+              {% if r.utente.fascia_prezzo %}&middot; {{ {'0-20':'fino €20','20-50':'€20–50','50-100':'€50–100','100-300':'€100–300','300+':'oltre €300'}.get(r.utente.fascia_prezzo, r.utente.fascia_prezzo) }}{% endif %}
+            </span>
+            {% endif %}
+            {{ r.utente.nome_completo }} · {{ r.created_at.strftime('%d/%m/%Y') }}
+          </span>
+        </div>
+        <p class="text-sm text-gray-600">{{ r.testo }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-400">Nessuna recensione ancora. Sii il primo!</p>
+    {% endif %}
+
+    {% if current_user.is_authenticated and not mercatino.is_futuro and not user_recensione %}
+    <form method="POST" action="{{ url_for('mercatini.aggiungi_recensione', id=mercatino.id) }}"
+          class="border-t border-gray-100 pt-4 space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p class="text-sm font-medium text-secondary">Lascia la tua recensione</p>
+      <div class="flex gap-1" id="star-rating">
+        {% for i in range(1, 6) %}
+        <label class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400 transition-colors star-label" data-val="{{ i }}">
+          ★<input type="radio" name="voto" value="{{ i }}" class="hidden" required>
+        </label>
+        {% endfor %}
+      </div>
+      <textarea name="testo" rows="3" minlength="20" required
+                placeholder="Descrivi la tua esperienza (min. 20 caratteri)..."
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"></textarea>
+      <label class="flex items-start gap-2 cursor-pointer select-none">
+        <input type="checkbox" name="dichiarazione" required
+               class="mt-0.5 shrink-0 accent-secondary">
+        <span class="text-xs text-gray-500 leading-relaxed">
+          Dichiaro di aver partecipato personalmente a questo mercatino e che la mia
+          recensione rispecchia la mia esperienza reale. Sono consapevole della mia
+          responsabilità personale riguardo al contenuto che pubblico.
+        </span>
+      </label>
+      <button type="submit"
+              class="w-full bg-secondary text-white text-sm font-medium py-2 rounded-lg
+                     hover:bg-secondary-light transition-colors">
+        Invia recensione
+      </button>
+    </form>
+    {% elif user_recensione %}
+    <p class="text-xs text-gray-400 border-t pt-3">Hai già lasciato una recensione
+      {% if not user_recensione.approvata %}— in attesa di approvazione.{% else %}.{% endif %}
+    </p>
+    {% endif %}
+  </div>
+
+  <a href="{{ url_for('mercatini.index') }}"   class="hover:text-primary">Mercatini</a>
     <span class="mx-1">›</span>
     <span class="text-secondary">{{ mercatino.titolo }}</span>
   </nav>
@@ -107,6 +250,40 @@
       {% endif %}
     </div>
     {% endif %}
+
+    <!-- Azioni rapide -->
+    <div class="border-t border-gray-100 pt-4 flex flex-wrap gap-2">
+      {% set maps_q = ([mercatino.indirizzo, mercatino.citta, mercatino.provincia, mercatino.regione, 'Italia'] | select | join(' ')) | urlencode %}
+      <a href="https://www.google.com/maps/search/?api=1&query={{ maps_q }}"
+         target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1.5 text-sm bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-full transition-colors">
+        📍 Come arrivare
+      </a>
+      {% if mercatino.telefono %}
+      {% set tel_wa = mercatino.telefono | replace(' ','') | replace('-','') | replace('+','') %}
+      {% if tel_wa.startswith('0') %}{% set tel_wa = '39' + tel_wa %}{% endif %}
+      <a href="https://wa.me/{{ tel_wa }}" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1.5 text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-full transition-colors">
+        💬 WhatsApp
+      </a>
+      {% endif %}
+      {% if mercatino.email_contatto %}
+      <a href="mailto:{{ mercatino.email_contatto }}"
+         class="inline-flex items-center gap-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-full transition-colors">
+        ✉️ Email
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated %}
+      <button id="btn-preferito"
+              data-id="{{ mercatino.id }}"
+              data-salvato="{{ 'true' if is_preferito else 'false' }}"
+              class="inline-flex items-center gap-1.5 text-sm border px-3 py-1.5 rounded-full transition-colors
+                     {% if is_preferito %}bg-red-50 border-red-300 text-red-500{% else %}border-gray-300 text-gray-500 hover:border-red-300 hover:text-red-400{% endif %}">
+        <span id="pref-icon">{{ '❤️' if is_preferito else '🤍' }}</span>
+        <span id="pref-label">{{ 'Salvato' if is_preferito else 'Salva' }}</span>
+      </button>
+      {% endif %}
+    </div>
 
     <!-- Organizzatore -->
     <div class="border-t border-gray-100 pt-3 text-xs text-gray-400">

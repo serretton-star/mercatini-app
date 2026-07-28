@@ -19,8 +19,16 @@ class User(UserMixin, db.Model):
     cognome = db.Column(db.String(100), nullable=False)
     bio = db.Column(db.Text, nullable=True)
     ruolo = db.Column(db.String(20), nullable=False, default='espositore')
-    # ruolo: 'espositore' | 'organizzatore' | 'admin'
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    provincia_residenza = db.Column(db.String(5), nullable=True, index=True)
+    categoria_prodotti  = db.Column(db.String(50), nullable=True)  # profilo espositore
+    fascia_prezzo       = db.Column(db.String(20), nullable=True)  # fascia prezzo prodotti
+    notifiche_email = db.Column(db.Boolean, nullable=False, default=True)
+
+    # GDPR consent
+    privacy_accepted = db.Column(db.Boolean, nullable=False, default=False)
+    privacy_accepted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     # Password reset
     reset_token = db.Column(db.String(100), nullable=True, unique=True, index=True)
@@ -48,13 +56,11 @@ class User(UserMixin, db.Model):
         return self.ruolo == 'admin'
 
     def genera_reset_token(self, expires_hours=1):
-        """Genera un token sicuro per il reset password (valido N ore)."""
         self.reset_token = secrets.token_urlsafe(32)
         self.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
         return self.reset_token
 
     def reset_token_valido(self):
-        """True se il token esiste e non è scaduto."""
         if not self.reset_token or not self.reset_token_expires:
             return False
         return datetime.now(timezone.utc) < self.reset_token_expires

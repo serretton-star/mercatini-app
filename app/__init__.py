@@ -48,7 +48,7 @@ def create_app(config_name=None):
 
     # Import modelli per Alembic autogenerate
     with app.app_context():
-        from app.models import User, Mercatino, Categoria  # noqa: F401
+        from app.models import User, Mercatino, Categoria, Recensione, Preferito, Alert  # noqa: F401
 
     from app.main import main as main_bp
     app.register_blueprint(main_bp)

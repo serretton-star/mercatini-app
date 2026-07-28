@@ -1,5 +1,89 @@
 {% extends 'base.html' %}
-{% block title %}Il mio account{% endblock %}
+{% block title %}Il mio account
+  <!-- Preferiti -->
+  <section id="preferiti" class="bg-white rounded-xl shadow-sm p-5 space-y-3">
+    <h2 class="font-semibold text-secondary">❤️ Preferiti</h2>
+    {% if preferiti %}
+    <div class="space-y-2">
+      {% for p in preferiti %}
+      <a href="{{ url_for('mercatini.dettaglio', id=p.mercatino_id) }}"
+         class="flex items-center justify-between bg-warm rounded-lg px-3 py-2 hover:bg-warm-dark transition-colors">
+        <div>
+          <p class="text-sm font-medium text-secondary">{{ p.mercatino.titolo }}</p>
+          <p class="text-xs text-gray-400">{{ p.mercatino.citta }} · {{ p.mercatino.data_inizio.strftime('%d/%m/%Y') }}</p>
+        </div>
+        <span class="text-xs {% if p.mercatino.is_in_corso %}text-green-500{% elif p.mercatino.is_futuro %}text-blue-500{% else %}text-gray-400{% endif %}">
+          {% if p.mercatino.is_in_corso %}In corso{% elif p.mercatino.is_futuro %}Prossimo{% else %}Passato{% endif %}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-400">Nessun mercatino salvato ancora.<br>
+      Clicca il 🤍 nella pagina di un mercatino per salvarlo qui.</p>
+    {% endif %}
+  </section>
+
+  <!-- Alert personalizzati -->
+  <section id="alert" class="bg-white rounded-xl shadow-sm p-5 space-y-4">
+    <h2 class="font-semibold text-secondary">🔔 Alert personalizzati</h2>
+    <p class="text-xs text-gray-500">Ricevi una email quando viene pubblicato un mercatino che corrisponde ai tuoi criteri.</p>
+
+    {% if alerts %}
+    <div class="space-y-2">
+      {% for a in alerts %}
+      <div class="flex items-center justify-between bg-warm rounded-lg px-3 py-2">
+        <div class="text-sm">
+          {% if a.parole_chiave %}<span class="text-secondary font-medium">🔍 {{ a.parole_chiave }}</span>{% endif %}
+          {% if a.provincia %}<span class="text-gray-500 ml-1">📍 {{ a.provincia }}</span>{% endif %}
+          {% if a.categoria %}<span class="text-gray-500 ml-1">🏷 {{ a.categoria.nome }}</span>{% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('account.elimina_alert', alert_id=a.id) }}" class="ml-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="text-xs text-red-400 hover:text-red-600">✕</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if alerts|length < 5 %}
+    <form method="POST" action="{{ url_for('account.crea_alert') }}"
+          class="border-t border-gray-100 pt-4 space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Parole chiave</label>
+        <input type="text" name="parole_chiave" placeholder="es. biologico, vintage, ceramica..."
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Provincia (sigla)</label>
+          <input type="text" name="provincia" maxlength="5" placeholder="es. MI"
+                 class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
+          <select name="categoria_id"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+            <option value="">Tutte</option>
+            {% for cat in categorie %}
+            <option value="{{ cat.id }}">{{ cat.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <button type="submit"
+              class="w-full bg-secondary text-white text-sm font-medium py-2 rounded-lg hover:bg-secondary-light transition-colors">
+        + Crea alert
+      </button>
+    </form>
+    {% else %}
+    <p class="text-xs text-gray-400 border-t pt-3">Hai raggiunto il limite di 5 alert attivi.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -29,8 +113,7 @@
   <section>
     <div class="flex items-center justify-between mb-3">
       <h2 class="font-semibold text-secondary">I miei mercatini</h2>
-      <a href="{{ url_for('mercatini.nuovo') }}"
-         class="text-sm text-primary hover:underline">+ Nuovo</a>
+      <a href="{{ url_for('mercatini.nuovo') }}" class="text-sm text-primary hover:underline">+ Nuovo</a>
     </div>
     {% if miei %}
     <div class="space-y-2">
@@ -39,23 +122,17 @@
         <div class="flex-1 min-w-0">
           <p class="font-medium text-secondary truncate">{{ m.titolo }}</p>
           <p class="text-xs text-gray-400">
-            {{ m.citta }} · {{ m.data_inizio.strftime('%d/%m/%Y') }}
+            {{ m.citta }} &middot; {{ m.data_inizio.strftime('%d/%m/%Y') }}
             {% if not m.pubblicato %}
-            <span class="ml-1 text-yellow-500">● bozza</span>
+            <span class="ml-1 text-yellow-500">&bull; bozza</span>
             {% endif %}
           </p>
         </div>
         <div class="flex gap-2 shrink-0">
           <a href="{{ url_for('mercatini.modifica', id=m.id) }}"
-             class="text-xs text-secondary border border-gray-200 px-2.5 py-1
-                    rounded-lg hover:bg-gray-50 transition-colors">
-            Modifica
-          </a>
+             class="text-xs text-secondary border border-gray-200 px-2.5 py-1 rounded-lg hover:bg-gray-50">Modifica</a>
           <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
-             class="text-xs text-primary border border-primary/30 px-2.5 py-1
-                    rounded-lg hover:bg-primary/5 transition-colors">
-            Vedi
-          </a>
+             class="text-xs text-primary border border-primary/30 px-2.5 py-1 rounded-lg hover:bg-primary/5">Vedi</a>
         </div>
       </div>
       {% endfor %}
@@ -63,16 +140,85 @@
     {% else %}
     <div class="text-center py-8 text-gray-400">
       <p>Non hai ancora inserito mercatini.</p>
-      <a href="{{ url_for('mercatini.nuovo') }}"
-         class="inline-block mt-3 text-primary text-sm hover:underline">
-        Aggiungi il primo →
+      <a href="{{ url_for('mercatini.nuovo') }}" class="inline-block mt-3 text-primary text-sm hover:underline">
+        Aggiungi il primo &rarr;
       </a>
     </div>
     {% endif %}
   </section>
 
-  <!-- MODIFICA PROFILO -->
+  <!-- NOTIFICHE & PRIVACY -->
   <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-1">Notifiche e Privacy</h2>
+    <p class="text-xs text-gray-400 mb-4">
+      Gestisci il consenso alle notifiche email sui mercatini nella tua provincia.
+    </p>
+
+    <!-- Stato consenso privacy -->
+    <div class="flex items-center gap-2 mb-4 p-3 rounded-lg
+                {{ 'bg-green-50 border border-green-100' if current_user.privacy_accepted else 'bg-red-50 border border-red-100' }}">
+      <span class="text-lg">{{ '&#9989;' if current_user.privacy_accepted else '&#10060;' }}</span>
+      <div>
+        <p class="text-sm font-medium {{ 'text-green-700' if current_user.privacy_accepted else 'text-red-700' }}">
+          Privacy Policy {{ 'accettata' if current_user.privacy_accepted else 'non accettata' }}
+        </p>
+        {% if current_user.privacy_accepted_at %}
+        <p class="text-xs text-gray-400">
+          Il {{ current_user.privacy_accepted_at.strftime('%d/%m/%Y alle %H:%M') }}
+        </p>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('main.privacy') }}"
+         class="ml-auto text-xs text-primary hover:underline">Leggi &rarr;</a>
+    </div>
+
+    <!-- Toggle notifiche -->
+    <form method="POST" action="{{ url_for('account.aggiorna_notifiche') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="flex items-start gap-3 p-4 border border-gray-100 rounded-xl">
+        <div class="pt-0.5">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="notifiche_email" value="1"
+                   id="toggle_notifiche"
+                   {{ 'checked' if current_user.notifiche_email else '' }}
+                   onchange="this.form.submit()"
+                   class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full
+                        peer peer-checked:after:translate-x-full peer-checked:after:border-white
+                        after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                        after:bg-white after:border-gray-300 after:border after:rounded-full
+                        after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-secondary">Notifiche email mercatini</p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            {% if current_user.provincia_residenza %}
+              Ricevi email quando vengono pubblicati nuovi mercatini nella provincia
+              <strong>{{ current_user.provincia_residenza }}</strong>.
+            {% else %}
+              Imposta una provincia nel profilo per ricevere notifiche locali.
+            {% endif %}
+          </p>
+          <p class="text-xs mt-1 {{ 'text-green-600' if current_user.notifiche_email else 'text-gray-400' }}">
+            {{ 'Notifiche attive' if current_user.notifiche_email else 'Notifiche disattivate' }}
+          </p>
+        </div>
+      </div>
+
+      {% if not current_user.provincia_residenza %}
+      <p class="text-xs text-amber-600 mt-2 ml-1">
+        &#9888; Nessuna provincia impostata &mdash;
+        <a href="#modifica-profilo" class="underline">aggiungila nel profilo</a>
+        per ricevere notifiche.
+      </p>
+      {% endif %}
+    </form>
+  </section>
+
+  <!-- MODIFICA PROFILO -->
+  <section id="modifica-profilo" class="bg-white rounded-xl shadow-sm p-5">
     <h2 class="font-semibold text-secondary mb-4">Modifica profilo</h2>
     <form method="POST" action="{{ url_for('account.modifica_profilo') }}" novalidate>
       {{ profilo_form.hidden_tag() }}
@@ -80,24 +226,44 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             {{ profilo_form.nome.label(class='block text-sm font-medium text-secondary mb-1') }}
-            {{ profilo_form.nome(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                                       focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+            {{ profilo_form.nome(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30') }}
           </div>
           <div>
             {{ profilo_form.cognome.label(class='block text-sm font-medium text-secondary mb-1') }}
-            {{ profilo_form.cognome(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                                          focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+            {{ profilo_form.cognome(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30') }}
           </div>
         </div>
         <div>
           {{ profilo_form.bio.label(class='block text-sm font-medium text-secondary mb-1') }}
           {{ profilo_form.bio(rows=3, placeholder='Raccontati in poche righe...',
-                              class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                                     focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+                              class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+        </div>
+        <!-- Profilo espositore -->
+        <div class="border-t border-gray-100 pt-3">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Profilo espositore</p>
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              {{ profilo_form.categoria_prodotti.label(class='block text-sm font-medium text-secondary mb-1') }}
+              <select name="{{ profilo_form.categoria_prodotti.name }}"
+                      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                {% for val, lbl in profilo_form.categoria_prodotti.choices %}
+                <option value="{{ val }}" {% if (current_user.categoria_prodotti or '') == val %}selected{% endif %}>{{ lbl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              {{ profilo_form.fascia_prezzo.label(class='block text-sm font-medium text-secondary mb-1') }}
+              <select name="{{ profilo_form.fascia_prezzo.name }}"
+                      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                {% for val, lbl in profilo_form.fascia_prezzo.choices %}
+                <option value="{{ val }}" {% if (current_user.fascia_prezzo or '') == val %}selected{% endif %}>{{ lbl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
         </div>
         <button type="submit"
-                class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg
-                       hover:bg-secondary-light transition-colors">
+                class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-secondary-light transition-colors">
           Salva profilo
         </button>
       </div>
@@ -113,16 +279,14 @@
         {% for field in [pw_form.password_attuale, pw_form.nuova_password, pw_form.nuova_password2] %}
         <div>
           {{ field.label(class='block text-sm font-medium text-secondary mb-1') }}
-          {{ field(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-primary/30') }}
+          {{ field(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30') }}
           {% for e in field.errors %}
           <p class="text-xs text-red-500 mt-1">{{ e }}</p>
           {% endfor %}
         </div>
         {% endfor %}
         <button type="submit"
-                class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg
-                       hover:bg-secondary-light transition-colors">
+                class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-secondary-light transition-colors">
           Cambia password
         </button>
       </div>
