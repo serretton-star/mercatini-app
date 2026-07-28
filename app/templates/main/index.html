@@ -281,20 +281,40 @@ function chiudiModale() {
 
 // Web Share / Condividi
 function condividi() {
+  var url  = window.location.href.split('?')[0]; // URL corrente senza query string
   var data = {
     title: 'Mercatini Artigianali in Italia',
     text: 'Scopri i mercatini artigianali vicino a te!',
-    url: 'https://mercatini.blog'
+    url: url
   };
   if (navigator.share) {
-    navigator.share(data).catch(function() {});
+    navigator.share(data).catch(function() { _copyFallback(url); });
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(function() { showToast('\uD83D\uDCCB Link copiato!'); })
+      .catch(function() { _copyFallback(url); });
   } else {
-    navigator.clipboard.writeText(data.url).then(function() {
-      showToast('Link copiato!');
-    }).catch(function() {
-      showToast('https://mercatini.blog');
-    });
+    _copyFallback(url);
   }
+}
+
+function _copyFallback(url) {
+  // Funziona anche su HTTP e browser vecchi
+  var inp = document.createElement('input');
+  inp.style.position = 'fixed';
+  inp.style.opacity  = '0';
+  inp.value = url;
+  document.body.appendChild(inp);
+  inp.focus();
+  inp.select();
+  inp.setSelectionRange(0, 99999);
+  try {
+    var ok = document.execCommand('copy');
+    showToast(ok ? '\uD83D\uDCCB Link copiato!' : url);
+  } catch(e) {
+    showToast(url);
+  }
+  document.body.removeChild(inp);
 }
 
 // Toast
