@@ -111,14 +111,7 @@
 
     <!-- Ingresso -->
     <div class="bg-warm rounded-lg p-3 space-y-2">
-      <label class="flex items-center gap-2 cursor-pointer">
-        {{ form.ingresso_gratuito(class='w-4 h-4 text-primary', id='ingresso_gratuito') }}
-        <span class="text-sm font-medium text-secondary">{{ form.ingresso_gratuito.label.text }}</span>
-      </label>
-      <div id="prezzo_box" class="hidden">
-        {{ campo(form.prezzo_ingresso, tipo='number', placeholder='0.00') }}
-      </div>
-    </div>
+</div>
 
     {{ campo(form.numero_espositori, tipo='number', placeholder='es. 50') }}
 
@@ -363,9 +356,6 @@ function fillForm(d){
   s('data_inizio',d.data_inizio);s('data_fine',d.data_fine);s('orario',d.orario);
   s('sito_web',d.sito_web);s('telefono',d.telefono);s('email_contatto',d.email_contatto);
   if(d.numero_espositori)s('numero_espositori',String(d.numero_espositori));
-  if(d.prezzo_ingresso)s('prezzo_ingresso',String(d.prezzo_ingresso));
-  var cb=document.getElementById('ingresso_gratuito');
-  if(cb&&d.ingresso_gratuito!=null)cb.checked=d.ingresso_gratuito;
   // Dopo fill: lookup geo se regione/provincia mancanti
   var regEl=document.getElementById('regione');
   var prvEl=document.getElementById('provincia');
@@ -440,8 +430,6 @@ document.addEventListener('paste',function(e){
 });
 
 /* Ingresso gratuito toggle */
-const cb=document.getElementById('ingresso_gratuito');
-const box=document.getElementById('prezzo_box');
 function toggle(){box.classList.toggle('hidden',cb.checked);}
 cb.addEventListener('change',toggle);
 toggle();

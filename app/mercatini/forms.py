@@ -66,12 +66,6 @@ class MercatinoForm(FlaskForm):
         'Email contatto',
         validators=[Optional(), Email(message='Email non valida.'), Length(max=255)]
     )
-    ingresso_gratuito = BooleanField('Ingresso gratuito', default=True)
-    prezzo_ingresso = DecimalField(
-        'Prezzo ingresso (€)',
-        validators=[Optional(), NumberRange(min=0, max=999.99)],
-        places=2
-    )
     numero_espositori = IntegerField(
         'Numero espositori',
         validators=[Optional(), NumberRange(min=1, max=10000)]

@@ -185,8 +185,7 @@ def nuovo():
             sito_web=form.sito_web.data or None,
             telefono=form.telefono.data or None,
             email_contatto=form.email_contatto.data or None,
-            ingresso_gratuito=form.ingresso_gratuito.data,
-            prezzo_ingresso=form.prezzo_ingresso.data if not form.ingresso_gratuito.data else None,
+            ingresso_gratuito=True,
             numero_espositori=form.numero_espositori.data or None,
             pubblicato=not form.pubblicato.data,
             organizzatore_id=current_user.id,
@@ -236,8 +235,7 @@ def modifica(id):
         m.sito_web = form.sito_web.data or None
         m.telefono = form.telefono.data or None
         m.email_contatto = form.email_contatto.data or None
-        m.ingresso_gratuito = form.ingresso_gratuito.data
-        m.prezzo_ingresso = form.prezzo_ingresso.data if not form.ingresso_gratuito.data else None
+        m.ingresso_gratuito = True
         m.numero_espositori = form.numero_espositori.data or None
         m.pubblicato = not form.pubblicato.data
         if form.categorie.data:
@@ -295,7 +293,7 @@ def ai_estrai():
         return jsonify({'error': 'Inserisci testo o immagine'}), 400
 
     _anno = _date.today().year
-    CAMPO = '{"titolo":null,"descrizione":null,"citta":null,"regione":null,"provincia":null,"indirizzo":null,"data_inizio":null,"data_fine":null,"orario":null,"ingresso_gratuito":true,"prezzo_ingresso":null,"numero_espositori":null,"sito_web":null,"telefono":null,"email_contatto":null}'
+    CAMPO = '{"titolo":null,"descrizione":null,"citta":null,"regione":null,"provincia":null,"indirizzo":null,"data_inizio":null,"data_fine":null,"orario":null,"ingresso_gratuito":true,"numero_espositori":null,"sito_web":null,"telefono":null,"email_contatto":null}'
 
     SYSTEM = (
         "Sei un assistente specializzato in mercatini italiani. "
@@ -379,7 +377,7 @@ def ai_estrai():
         "(nessun altro testo, nessun markdown) con questi campi (null se mancante):\n"
         '{"titolo":null,"descrizione":null,"citta":null,"regione":null,'
         '"provincia":null,"indirizzo":null,"data_inizio":null,"data_fine":null,'
-        '"orario":null,"ingresso_gratuito":true,"prezzo_ingresso":null,'
+        '"orario":null,"ingresso_gratuito":true,'
         '"numero_espositori":null,"sito_web":null,"telefono":null,"email_contatto":null}\n'
         "data_inizio e data_fine in formato YYYY-MM-DD. "
         f"Anno corrente: 2026. Se nella data manca l'anno, usa sempre 2026. "
@@ -635,16 +633,11 @@ def ai_crea_batch():
             m.sito_web     = ev.get('sito_web')
             m.telefono     = ev.get('telefono')
             m.email_contatto = ev.get('email_contatto')
-            m.ingresso_gratuito = bool(ev.get('ingresso_gratuito', True))
             m.pubblicato   = False   # bozza: l'utente rivede e pubblica
             m.organizzatore_id = current_user.id
             if ev.get('numero_espositori'):
                 try: m.numero_espositori = int(ev['numero_espositori'])
-                except: pass
-            if ev.get('prezzo_ingresso'):
-                try: m.prezzo_ingresso = float(ev['prezzo_ingresso'])
-                except: pass
-            for campo in ['data_inizio', 'data_fine']:
+                except: pass            for campo in ['data_inizio', 'data_fine']:
                 v = ev.get(campo)
                 if v:
                     try: setattr(m, campo, _dt.strptime(v, '%Y-%m-%d').date())
