@@ -637,7 +637,8 @@ def ai_crea_batch():
             m.organizzatore_id = current_user.id
             if ev.get('numero_espositori'):
                 try: m.numero_espositori = int(ev['numero_espositori'])
-                except: pass            for campo in ['data_inizio', 'data_fine']:
+                except: pass
+            for campo in ['data_inizio', 'data_fine']:
                 v = ev.get(campo)
                 if v:
                     try: setattr(m, campo, _dt.strptime(v, '%Y-%m-%d').date())
