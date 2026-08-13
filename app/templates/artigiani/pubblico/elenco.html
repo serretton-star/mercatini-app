@@ -111,7 +111,7 @@
 
 <div class="art-grid">
   {% for h in hobbisti %}
-  <a href="{{ url_for('artigiani.profilo', hobbista_id=h.id) }}" class="art-card">
+  <a href="{{ url_for('artigiani.profilo', slug=h.slug) if h.slug else url_for('artigiani.profilo_redirect', hobbista_id=h.id) }}" class="art-card">
     {% if h.foto_di_copertina %}
     <img src="{{ h.foto_di_copertina.thumb_url }}" alt="{{ h.nome_visualizzato|e }}"
          class="art-card-cover" loading="lazy">

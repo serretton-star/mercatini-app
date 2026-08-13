@@ -50,27 +50,27 @@ def elenco():
                            hobbisti=hobbisti, q=q)
 
 
-@artigiani.route('/<int:hobbista_id>')
-def profilo(hobbista_id):
-    """Profilo pubblico del singolo artigiano."""
-    hobbista = HobbistaAccount.query.get_or_404(hobbista_id)
+@artigiani.route('/<slug>')
+def profilo(slug):
+    """Profilo pubblico del singolo artigiano (via slug, es. /artigiani/selinar)."""
+    hobbista = HobbistaAccount.query.filter_by(slug=slug).first_or_404()
     if hobbista.stato != StatoHobbista.attivo:
         abort(404)
     foto = (HobbistaFoto.query
-            .filter_by(account_id=hobbista_id)
+            .filter_by(account_id=hobbista.id)
             .order_by(HobbistaFoto.ordine)
             .all())
     is_following = False
     if current_user.is_authenticated:
         from app.models.follow import HobbistaFollow
         is_following = HobbistaFollow.query.filter_by(
-            user_id=current_user.id, hobbista_id=hobbista_id, attivo=True
+            user_id=current_user.id, hobbista_id=hobbista.id, attivo=True
         ).first() is not None
     from app.models.follow import HobbistaEventoPartecipazione
     from datetime import date as _date
     oggi = _date.today()
     partecipazioni_attive = (HobbistaEventoPartecipazione.query
-                             .filter_by(hobbista_id=hobbista_id)
+                             .filter_by(hobbista_id=hobbista.id)
                              .filter(HobbistaEventoPartecipazione.data_evento >= oggi)
                              .order_by(HobbistaEventoPartecipazione.data_evento)
                              .limit(6)
@@ -80,6 +80,15 @@ def profilo(hobbista_id):
                            is_following=is_following,
                            partecipazioni_attive=partecipazioni_attive,
                            oggi=oggi)
+
+
+@artigiani.route('/<int:hobbista_id>')
+def profilo_redirect(hobbista_id):
+    """Redirect 301 da URL numerico legacy al profilo con slug (backward compat + SEO)."""
+    hobbista = HobbistaAccount.query.get_or_404(hobbista_id)
+    if hobbista.slug:
+        return redirect(url_for('artigiani.profilo', slug=hobbista.slug), 301)
+    abort(404)
 
 
 @artigiani.route('/termini')
@@ -96,7 +105,6 @@ def serve_foto(slug, filename):
     Serve una foto (o thumbnail) tramite slug artigiano.
     URL: /artigiani/foto/<slug>/<file>.jpg
          /artigiani/foto/<slug>/thumb/<file>.jpg
-    I file risiedono fisicamente in ARTIGIANI_UPLOAD_FOLDER/<account_id>/...
     """
     hobbista = HobbistaAccount.query.filter_by(slug=slug).first_or_404()
     upload_base = current_app.config['ARTIGIANI_UPLOAD_FOLDER']
@@ -107,11 +115,18 @@ def serve_foto(slug, filename):
 # Segnalazione pubblica foto (POST)
 @artigiani.route('/<int:hobbista_id>/segnala', methods=['POST'])
 def segnala(hobbista_id):
+    hobbista = HobbistaAccount.query.get_or_404(hobbista_id)
+
+    def _redirect_profilo():
+        if hobbista.slug:
+            return redirect(url_for('artigiani.profilo', slug=hobbista.slug))
+        return redirect(url_for('artigiani.profilo_redirect', hobbista_id=hobbista_id))
+
     foto_id = request.form.get('foto_id', type=int)
     motivo  = request.form.get('motivo', '').strip()[:500]
     if not foto_id or not motivo:
         flash('Compila tutti i campi per inviare una segnalazione.', 'danger')
-        return redirect(url_for('artigiani.profilo', hobbista_id=hobbista_id))
+        return _redirect_profilo()
 
     foto = HobbistaFoto.query.get_or_404(foto_id)
     if foto.account_id != hobbista_id:
@@ -121,7 +136,7 @@ def segnala(hobbista_id):
     db.session.add(seg)
     db.session.commit()
     flash('Segnalazione inviata. Grazie.', 'success')
-    return redirect(url_for('artigiani.profilo', hobbista_id=hobbista_id))
+    return _redirect_profilo()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -170,7 +185,6 @@ def carica_foto():
                 errori.append(f"{f.filename}: formato non supportato (usa JPG, PNG, WEBP).")
                 continue
 
-            # Controlla dimensione pre-upload
             f.seek(0, 2)
             size_bytes = f.tell()
             f.seek(0)
@@ -178,9 +192,8 @@ def carica_foto():
                 errori.append(f"{f.filename}: file troppo grande (max {MAX_FILE_MB} MB).")
                 continue
 
-            # Controlla quota piano
             if (hobbista.storage_usato_mb + size_bytes / (1024 * 1024)
-                    > hobbista.storage_max_mb + 5):   # +5 MB tolleranza per compressione
+                    > hobbista.storage_max_mb + 5):
                 errori.append("Spazio di archiviazione esaurito. "
                               "Elimina alcune foto o passa a un piano superiore.")
                 break
@@ -206,7 +219,6 @@ def carica_foto():
             )
             db.session.add(foto)
             db.session.commit()
-            # Aggiungi alla coda digest
             try:
                 from app.models.follow import HobbistaFotoDigestQueue
                 dq = HobbistaFotoDigestQueue(foto_id=foto.id, hobbista_id=hobbista.id)
@@ -238,11 +250,8 @@ def elimina_foto(foto_id):
     if foto.account_id != hobbista.id:
         abort(403)
 
-    # Elimina dipendenze prima della foto:
-    # HobbistaFotoDigestQueue.foto_id è NOT NULL → SQLAlchemy non può SET NULL → IntegrityError
     from app.models.follow import HobbistaFotoDigestQueue
     HobbistaFotoDigestQueue.query.filter_by(foto_id=foto.id).delete()
-    # HobbistaSegnalazione.foto_id è NOT NULL → stessa logica
     HobbistaSegnalazione.query.filter_by(foto_id=foto.id).delete()
 
     elimina_foto_files(foto)
@@ -261,7 +270,6 @@ def elimina_foto(foto_id):
 def riordina_foto():
     hobbista  = get_current_hobbista()
     ordinamento = request.get_json(silent=True) or {}
-    # ordinamento: {"foto_id": nuovo_ordine, ...}
 
     for foto_id_str, ordine in ordinamento.items():
         try:
@@ -310,7 +318,6 @@ def abbonamento():
                            hobbista=hobbista, piani=piani)
 
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # STRIPE CHECKOUT — PIANI HOBBISTI
 # ══════════════════════════════════════════════════════════════════════════════
@@ -318,11 +325,7 @@ def abbonamento():
 @artigiani.route('/dashboard/abbonamento/checkout/<int:piano_id>', methods=['POST'])
 @hobbista_required
 def abbonamento_checkout(piano_id):
-    """Crea una Stripe Checkout Session per il piano selezionato."""
     import stripe
-    from flask import current_app, redirect
-    from app.models.hobbisti import HobbistaPiano
-
     hobbista = get_current_hobbista()
     piano    = HobbistaPiano.query.get_or_404(piano_id)
 
@@ -333,7 +336,6 @@ def abbonamento_checkout(piano_id):
     stripe.api_key = current_app.config["STRIPE_SECRET_KEY"]
     base_url = current_app.config.get("BASE_URL", "https://mercatini.blog")
 
-    # Recupera o crea Stripe Customer
     customer_id = hobbista.stripe_customer_id
     if not customer_id:
         customer = stripe.Customer.create(
@@ -343,11 +345,10 @@ def abbonamento_checkout(piano_id):
         )
         customer_id = customer.id
         hobbista.stripe_customer_id = customer_id
-        from app import db
         db.session.commit()
 
     try:
-        session = stripe.checkout.Session.create(
+        sess = stripe.checkout.Session.create(
             customer=customer_id,
             payment_method_types=["card"],
             line_items=[{"price": piano.stripe_price_id, "quantity": 1}],
@@ -358,7 +359,7 @@ def abbonamento_checkout(piano_id):
             metadata={"hobbista_id": str(hobbista.id), "piano_id": str(piano.id)},
             subscription_data={"metadata": {"hobbista_id": str(hobbista.id), "piano_id": str(piano.id)}},
         )
-        return redirect(session.url, code=303)
+        return redirect(sess.url, code=303)
     except Exception as exc:
         log.error("Stripe checkout error: %s", exc)
         flash("Errore durante il pagamento. Riprova o contattaci.", "danger")
@@ -369,26 +370,20 @@ def abbonamento_checkout(piano_id):
 @hobbista_required
 def abbonamento_successo():
     hobbista = get_current_hobbista()
-    return render_template("artigiani/dashboard/abbonamento_successo.html",
-                           hobbista=hobbista)
+    return render_template("artigiani/dashboard/abbonamento_successo.html", hobbista=hobbista)
 
 
 @artigiani.route("/dashboard/abbonamento/cancellato")
 @hobbista_required
 def abbonamento_cancellato():
     hobbista = get_current_hobbista()
-    return render_template("artigiani/dashboard/abbonamento_cancellato.html",
-                           hobbista=hobbista)
+    return render_template("artigiani/dashboard/abbonamento_cancellato.html", hobbista=hobbista)
 
 
 @artigiani.route("/stripe-webhook-hobbisti", methods=["POST"])
 def stripe_webhook_hobbisti():
-    """Webhook Stripe per eventi abbonamenti hobbisti."""
     import stripe
-    from flask import current_app, request
-    from app import db
-    from app.models.hobbisti import HobbistaAccount, HobbistaPiano, HobbistaAbbonamento, StatoAbbonamento
-    from datetime import datetime, timezone
+    from datetime import timedelta
 
     stripe.api_key = current_app.config["STRIPE_SECRET_KEY"]
     payload    = request.get_data()
@@ -400,11 +395,10 @@ def stripe_webhook_hobbisti():
             event = stripe.Webhook.construct_event(payload, sig_header, secret)
         except (ValueError, stripe.error.SignatureVerificationError) as e:
             log.warning("Stripe webhook signature invalid: %s", e)
-            from flask import abort
             abort(400)
     else:
-        import json
-        event = json.loads(payload)
+        import json as _json
+        event = _json.loads(payload)
 
     etype = event["type"]
     data  = event["data"]["object"]
@@ -414,52 +408,44 @@ def stripe_webhook_hobbisti():
         piano_id    = int(data.get("metadata", {}).get("piano_id", 0))
         sub_id      = data.get("subscription")
         session_id  = data.get("id")
-
         hobbista = db.session.get(HobbistaAccount, hobbista_id)
         piano    = db.session.get(HobbistaPiano, piano_id)
         if hobbista and piano:
-            from datetime import timedelta
             scadenza = datetime.now(timezone.utc) + timedelta(days=32)
-            # Disattiva abbonamenti attivi precedenti
             for old in hobbista.abbonamenti:
-                if old.stato == StatoAbbonamento.attivo:
-                    old.stato = StatoAbbonamento.scaduto
+                if old.stato.value == 'attivo':
+                    old.stato = 'scaduto'
+            from app.models.hobbisti import StatoAbbonamento
             abb = HobbistaAbbonamento(
-                hobbista_id=hobbista.id,
-                piano_id=piano.id,
-                data_scadenza=scadenza,
-                stato=StatoAbbonamento.attivo,
+                account_id=hobbista.id, piano_id=piano.id,
+                data_inizio=datetime.now(timezone.utc),
+                data_scadenza=scadenza, stato=StatoAbbonamento.attivo,
                 provider_pagamento="stripe",
-                stripe_subscription_id=sub_id,
-                stripe_session_id=session_id,
+                stripe_subscription_id=sub_id, stripe_session_id=session_id,
             )
             db.session.add(abb)
             hobbista.piano_id = piano.id
             db.session.commit()
-            log.info("Abbonamento hobbista %s attivato su piano %s", hobbista_id, piano.nome)
 
     elif etype in ("customer.subscription.deleted", "customer.subscription.paused"):
+        from app.models.hobbisti import StatoAbbonamento
         sub_id = data.get("id")
         abb = HobbistaAbbonamento.query.filter_by(
-            stripe_subscription_id=sub_id,
-            stato=StatoAbbonamento.attivo
+            stripe_subscription_id=sub_id, stato=StatoAbbonamento.attivo
         ).first()
         if abb:
             abb.stato = StatoAbbonamento.scaduto
-            # Reset al piano base
             base = HobbistaPiano.query.order_by(HobbistaPiano.prezzo_mensile_eur).first()
             if base:
-                abb.hobbista.piano_id = base.id
+                abb.account.piano_id = base.id
             db.session.commit()
-            log.info("Abbonamento %s cancellato/sospeso", sub_id)
 
     elif etype == "invoice.paid":
-        # Rinnovo: aggiorna data_scadenza
-        sub_id = data.get("subscription")
         from datetime import timedelta
+        from app.models.hobbisti import StatoAbbonamento
+        sub_id = data.get("subscription")
         abb = HobbistaAbbonamento.query.filter_by(
-            stripe_subscription_id=sub_id,
-            stato=StatoAbbonamento.attivo
+            stripe_subscription_id=sub_id, stato=StatoAbbonamento.attivo
         ).first()
         if abb:
             abb.data_scadenza = datetime.now(timezone.utc) + timedelta(days=32)
@@ -468,15 +454,11 @@ def stripe_webhook_hobbisti():
     return ("", 200)
 
 
-# TODO: aggiungere route POST /dashboard/abbonamento/upgrade dopo integrazione Stripe.
-# Il flusso sarà: selezione piano → Stripe Checkout → webhook → aggiorna HobbistaAbbonamento.
-
-
 # ── Modifica didascalia foto (AJAX) ───────────────────────────────────────────
+
 @artigiani.route('/dashboard/foto/<int:foto_id>/didascalia', methods=['POST'])
 @hobbista_required
 def modifica_didascalia(foto_id):
-    from flask import jsonify, abort
     hobbista = get_current_hobbista()
     foto = HobbistaFoto.query.get_or_404(foto_id)
     if foto.account_id != hobbista.id:
@@ -494,7 +476,6 @@ def modifica_didascalia(foto_id):
 @artigiani.route('/<int:hobbista_id>/segui', methods=['POST'])
 @login_required
 def segui(hobbista_id):
-    """AJAX: crea o riattiva un follow (utente espositore → artigiano)."""
     from app.models.follow import HobbistaFollow
     hobbista = HobbistaAccount.query.get_or_404(hobbista_id)
     follow = HobbistaFollow.query.filter_by(
@@ -506,14 +487,12 @@ def segui(hobbista_id):
         follow = HobbistaFollow(user_id=current_user.id, hobbista_id=hobbista_id)
         db.session.add(follow)
     db.session.commit()
-    return jsonify({'seguendo': True,
-                    'msg': f'Stai seguendo {hobbista.nome_visualizzato}'})
+    return jsonify({'seguendo': True, 'msg': f'Stai seguendo {hobbista.nome_visualizzato}'})
 
 
 @artigiani.route('/<int:hobbista_id>/smetti-di-seguire', methods=['POST'])
 @login_required
 def smetti_di_seguire(hobbista_id):
-    """AJAX: soft-unfollow (attivo=False, mantiene storico)."""
     from app.models.follow import HobbistaFollow
     follow = HobbistaFollow.query.filter_by(
         user_id=current_user.id, hobbista_id=hobbista_id, attivo=True
@@ -529,7 +508,6 @@ def smetti_di_seguire(hobbista_id):
 @artigiani.route('/dashboard/eventi/dichiara-partecipazione', methods=['GET', 'POST'])
 @hobbista_required
 def dichiara_partecipazione():
-    """Form: l'artigiano dichiara la partecipazione a un mercatino/evento."""
     from app.models.follow import HobbistaEventoPartecipazione
     from app.models.mercatino import Mercatino
     from datetime import date
@@ -549,23 +527,18 @@ def dichiara_partecipazione():
         data_ev = None
         if data_ev_str:
             try:
-                from datetime import datetime
                 data_ev = datetime.strptime(data_ev_str, '%Y-%m-%d').date()
             except ValueError:
                 pass
 
         part = HobbistaEventoPartecipazione(
-            hobbista_id  = hobbista.id,
-            mercatino_id = merc_id,
-            nome_evento  = nome_ev or None,
-            data_evento  = data_ev,
-            luogo_evento = luogo_ev or None,
-            messaggio_breve = msg or None,
+            hobbista_id=hobbista.id, mercatino_id=merc_id,
+            nome_evento=nome_ev or None, data_evento=data_ev,
+            luogo_evento=luogo_ev or None, messaggio_breve=msg or None,
         )
         db.session.add(part)
         db.session.commit()
 
-        # Invia notifica immediata ai followers
         try:
             from app.tasks import invia_notifica_evento
             invia_notifica_evento(current_app._get_current_object(), part.id)
@@ -575,14 +548,11 @@ def dichiara_partecipazione():
         flash('Partecipazione dichiarata! I tuoi follower verranno avvisati.', 'success')
         return redirect(url_for('artigiani.dashboard'))
 
-    # GET: carica prossimi mercatini per autocomplete
     from datetime import date, timedelta
     prossimi = (
         Mercatino.query
-        .filter(Mercatino.pubblicato == True,
-                Mercatino.data_inizio >= date.today())
-        .order_by(Mercatino.data_inizio.asc())
-        .limit(50).all()
+        .filter(Mercatino.pubblicato == True, Mercatino.data_inizio >= date.today())
+        .order_by(Mercatino.data_inizio.asc()).limit(50).all()
     )
     return render_template('artigiani/dashboard/dichiara_partecipazione.html',
                            hobbista=hobbista, prossimi=prossimi)
