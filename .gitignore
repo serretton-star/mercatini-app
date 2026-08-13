@@ -6,3 +6,8 @@ instance/
 *.sqlite
 *.sock
 *.log
+
+# Runtime - non committare
+app/static/uploads/
+logs/
+*.bak

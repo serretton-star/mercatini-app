@@ -1,6 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="max-w-lg mx-auto mt-16 text-center px-4">
+  <div class="text-5xl mb-4">⭐</div>
+  <h2 class="text-xl font-bold text-secondary mb-2">Chat AI &mdash; solo Premium</h2>
+  <p class="text-gray-500 text-sm mb-6">L'assistente AI è disponibile per gli abbonati Premium.<br>Scopri i piani a partire da &euro;4/mese.</p>
+     class="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+    Attiva Premium
+  </a>
+  <p class="text-xs text-gray-400 mt-4">Nessun rinnovo automatico &mdash; paghi solo per il periodo scelto.</p>
+</div>
+{% else %}
 <div class="max-w-2xl mx-auto mt-4 flex flex-col" style="height: calc(100vh - 140px);">
 
   <!-- Intestazione -->
@@ -219,4 +229,5 @@ btnReset.addEventListener('click', async () => {
   addBubble('assistant', 'Chat azzerata. Come posso aiutarti?');
 });
 </script>
+{% endif %}
 {% endblock %}

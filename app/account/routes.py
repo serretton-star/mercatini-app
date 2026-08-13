@@ -130,3 +130,56 @@ def elimina_alert(alert_id):
     db.session.commit()
     flash('Alert eliminato.', 'info')
     return redirect(url_for('account.profilo') + '#alert')
+
+
+# ── Artigiani seguiti ─────────────────────────────────────────────────────────
+
+@account.route('/seguiti')
+@login_required
+def seguiti():
+    """Lista degli artigiani seguiti dall'utente + gestione preferenze."""
+    from app.models.follow import HobbistaFollow
+    follows = (
+        HobbistaFollow.query
+        .filter_by(user_id=current_user.id, attivo=True)
+        .order_by(HobbistaFollow.data_inizio_follow.desc())
+        .all()
+    )
+    return render_template('account/artigiani_seguiti.html', follows=follows)
+
+
+@account.route('/notifiche-artigiani', methods=['POST'])
+@login_required
+def notifiche_artigiani():
+    """Toggle preferenze notifiche artigiani hobbisti."""
+    current_user.notifiche_eventi_hobbisti      = 'notifiche_eventi' in request.form
+    current_user.notifiche_digest_foto_hobbisti = 'notifiche_digest' in request.form
+    db.session.commit()
+    flash('Preferenze notifiche artigiani aggiornate.', 'success')
+    return redirect(url_for('account.seguiti'))
+
+
+@account.route('/unsubscribe-artigiani')
+def unsubscribe_artigiani():
+    """One-click unsubscribe via token firmato (link nelle email)."""
+    from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+    from flask import current_app
+    token = request.args.get('token', '')
+    tipo  = request.args.get('tipo', 'digest')  # 'eventi' o 'digest'
+    try:
+        s    = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        data = s.loads(token, salt='hobbista-follow-unsub-v1', max_age=30*24*3600)
+        user = db.session.get(current_user.__class__, data['user_id'])
+        if not user:
+            flash('Link non valido.', 'danger')
+            return redirect(url_for('main.index'))
+        if tipo == 'eventi':
+            user.notifiche_eventi_hobbisti = False
+        else:
+            user.notifiche_digest_foto_hobbisti = False
+        db.session.commit()
+        flash('Preferenza aggiornata — non riceverai più queste email.', 'success')
+    except (BadSignature, SignatureExpired):
+        flash('Il link di disiscrizione è scaduto o non valido.', 'warning')
+    return redirect(url_for('account.seguiti') if current_user.is_authenticated
+                   else url_for('main.index'))

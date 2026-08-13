@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Admin — Artigiani Hobbisti{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:24px;flex-wrap:wrap;gap:12px">
+  <div>
+    <div class="section-label" style="margin-bottom:4px">Admin</div>
+    <h1 style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:900;
+               letter-spacing:-.03em">Artigiani Hobbisti</h1>
+  </div>
+  {% if segnalazioni_aperte %}
+  <a href="{{ url_for('admin.artigiani_segnalazioni') }}"
+     style="background:#FEF2F2;color:#991B1B;border:1px solid #FCA5A5;
+            border-radius:8px;padding:8px 16px;text-decoration:none;
+            font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600">
+    {{ segnalazioni_aperte }} segnalazion{{ 'e' if segnalazioni_aperte==1 else 'i' }} aperte
+  </a>
+  {% endif %}
+</div>
+
+<div style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+    <thead>
+      <tr style="border-bottom:2px solid var(--sand)">
+        <th style="text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;
+                   font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+                   color:var(--warm)">Nome</th>
+        <th style="text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;
+                   font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+                   color:var(--warm)">Email</th>
+        <th style="text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;
+                   font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+                   color:var(--warm)">Stato</th>
+        <th style="text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;
+                   font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+                   color:var(--warm)">Foto</th>
+        <th style="text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;
+                   font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+                   color:var(--warm)">Iscritto</th>
+        <th style="padding:8px 12px"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in hobbisti %}
+      <tr style="border-bottom:1px solid var(--sand)">
+        <td style="padding:10px 12px;font-weight:500">
+          <a href="{{ url_for('artigiani.profilo', hobbista_id=h.id) }}"
+             target="_blank" style="color:var(--ink);text-decoration:none">
+            {{ h.nome_visualizzato }}
+          </a>
+        </td>
+        <td style="padding:10px 12px;color:var(--warm)">{{ h.email }}</td>
+        <td style="padding:10px 12px">
+          {% set colori = {'attivo':'#ECFDF5;color:#065F46','in_verifica':'#FFFBEB;color:#92400E','sospeso':'#FEF2F2;color:#991B1B'} %}
+          <span style="background:{{ colori.get(h.stato.value,'#f5f5f5') }};
+                       padding:3px 10px;border-radius:100px;font-size:.72rem;
+                       font-family:'DM Mono',monospace;letter-spacing:.06em">
+            {{ h.stato.value }}
+          </span>
+        </td>
+        <td style="padding:10px 12px;color:var(--warm)">{{ h.foto|length }}</td>
+        <td style="padding:10px 12px;color:var(--warm);font-size:.78rem">
+          {{ h.data_registrazione.strftime('%d/%m/%Y') }}
+        </td>
+        <td style="padding:10px 12px">
+          <form method="POST"
+                action="{{ url_for('admin.artigiani_stato', hobbista_id=h.id) }}"
+                style="display:flex;gap:6px;align-items:center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="stato"
+                    style="border:1px solid var(--sand);border-radius:6px;
+                           padding:5px 8px;font-size:.78rem;font-family:'DM Sans',sans-serif">
+              {% for s in StatoHobbista %}
+              <option value="{{ s.value }}"
+                      {{ 'selected' if s == h.stato else '' }}>
+                {{ s.value }}
+              </option>
+              {% endfor %}
+            </select>
+            <button type="submit"
+                    style="background:var(--terra);color:#fff;border:none;
+                           border-radius:6px;padding:5px 12px;font-size:.78rem;
+                           cursor:pointer">
+              Salva
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--warm)">
+        Nessun artigiano registrato ancora.
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

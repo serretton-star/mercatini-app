@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ hobbista.nome_visualizzato }}
+  <!-- MODIFICA DESCRIZIONI -->
+  {% if hobbista.foto %}
+  <div style="margin-top:24px">
+    <div style="font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
+                text-transform:uppercase;color:var(--warm);margin-bottom:14px">
+      Descrizioni delle creazioni
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="did-list">
+      {% for f in hobbista.foto %}
+      <div style="display:flex;gap:12px;align-items:flex-start;
+                  background:#fff;border:1px solid var(--sand);
+                  border-radius:10px;padding:12px 14px"
+           id="did-row-{{ f.id }}">
+        <img src="{{ f.thumb_url }}" alt=""
+             style="width:52px;height:52px;object-fit:cover;border-radius:7px;
+                    flex-shrink:0;border:1px solid var(--paper2)">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text"
+                   id="did-input-{{ f.id }}"
+                   value="{{ f.didascalia or '' }}"
+                   maxlength="150"
+                   placeholder="Aggiungi una descrizione per questa creazione…"
+                   style="flex:1;border:1px solid var(--sand);border-radius:6px;
+                          padding:7px 10px;font-family:'DM Sans',sans-serif;
+                          font-size:.82rem;background:var(--paper);
+                          color:var(--ink);outline:none;min-width:0"
+                   onfocus="this.style.borderColor='var(--terra)'"
+                   onblur="this.style.borderColor='var(--sand)'">
+            <button onclick="salvaDid({{ f.id }})"
+                    id="did-btn-{{ f.id }}"
+                    style="background:var(--terra);color:#fff;border:none;
+                           border-radius:6px;padding:7px 14px;
+                           font-family:'DM Sans',sans-serif;font-size:.78rem;
+                           font-weight:600;cursor:pointer;white-space:nowrap;
+                           transition:background .2s"
+                    onmouseenter="this.style.background='var(--terra2)'"
+                    onmouseleave="this.style.background='var(--terra)'">
+              Salva
+            </button>
+          </div>
+          <div id="did-ok-{{ f.id }}"
+               style="display:none;font-size:.7rem;color:#059669;
+                      margin-top:4px;font-family:'DM Mono',monospace">
+            ✓ Salvata
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+<script>
+async function salvaDid(fotoId) {
+  const input = document.getElementById('did-input-' + fotoId);
+  const btn   = document.getElementById('did-btn-' + fotoId);
+  const ok    = document.getElementById('did-ok-' + fotoId);
+  btn.disabled = true; btn.textContent = '…';
+  const fd = new FormData();
+  fd.append('didascalia', input.value);
+  fd.append('csrf_token', document.querySelector('meta[name=csrf-token]').content);
+  try {
+    const r = await fetch('/artigiani/dashboard/foto/' + fotoId + '/didascalia', {method:'POST',body:fd});
+    const j = await r.json();
+    if (j.ok) {
+      ok.style.display = 'block';
+      setTimeout(() => ok.style.display = 'none', 2500);
+    }
+  } catch(e) { console.error(e); }
+  btn.disabled = false; btn.textContent = 'Salva';
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .dash-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px }
+  @media(max-width:540px){.dash-grid{grid-template-columns:1fr}}
+  .dash-card {
+    background:#fff;border:1px solid var(--sand);border-radius:12px;
+    padding:20px 22px;
+  }
+  .dash-card-label {
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--warm);margin-bottom:6px;
+  }
+  .dash-card-value {
+    font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;
+    letter-spacing:-.02em;
+  }
+  .storage-bar {
+    height:6px;background:var(--sand);border-radius:100px;
+    overflow:hidden;margin-top:8px;
+  }
+  .storage-fill {
+    height:100%;border-radius:100px;
+    background:var(--terra);
+    transition:width .4s ease;
+  }
+  .foto-mini-grid {
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;
+    margin-top:16px;
+  }
+  .foto-mini {
+    aspect-ratio:1;border-radius:8px;overflow:hidden;
+    border:1px solid var(--sand);
+    position:relative;
+  }
+  .foto-mini img{width:100%;height:100%;object-fit:cover}
+  .foto-mini-del {
+    position:absolute;top:4px;right:4px;
+    background:rgba(14,12,10,.6);color:#fff;
+    border:none;border-radius:50%;width:22px;height:22px;
+    font-size:.7rem;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;
+  }
+  .quick-link {
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;
+    color:#fff;background:var(--terra);text-decoration:none;
+    border-radius:8px;padding:9px 18px;transition:background .2s;
+  }
+  .quick-link:hover{background:var(--terra2)}
+  .ghost-link {
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;
+    color:var(--ink);text-decoration:none;
+    border:1px solid var(--sand);border-radius:8px;padding:8px 16px;
+    transition:border-color .2s;
+  }
+  .ghost-link:hover{border-color:var(--terra);color:var(--terra)}
+</style>
+
+<!-- Header -->
+<div style="display:flex;align-items:center;justify-content:space-between;
+            flex-wrap:wrap;gap:12px;margin-bottom:28px">
+  <div>
+    <div class="section-label" style="margin-bottom:4px">Dashboard</div>
+    <h1 style="font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;
+               letter-spacing:-.03em">
+      Ciao, {{ hobbista.nome_visualizzato.split()[0] }}
+    </h1>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a href="{{ url_for('artigiani.profilo', hobbista_id=hobbista.id) }}"
+       class="ghost-link" target="_blank">
+      Vedi profilo pubblico
+    </a>
+    <a href="{{ url_for('artigiani.carica_foto') }}" class="quick-link">
+      + Carica foto
+    </a>
+  </div>
+</div>
+      <a href="{{ url_for('artigiani.dichiara_partecipazione') }}" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 14px;background:var(--paper2);border:1px solid var(--sand);border-radius:8px;font-size:.78rem;color:var(--terra);text-decoration:none;font-family:'DM Mono',monospace">
+        📅 Dichiara partecipazione
+      </a>
+
+<!-- Stato account -->
+{% if hobbista.stato.value == 'in_verifica' %}
+<div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;
+            padding:14px 18px;margin-bottom:20px;font-size:.88rem;color:#92400E">
+  Il tuo profilo è in revisione. Sarà visibile pubblicamente appena approvato
+  (di solito entro 24h).
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="dash-grid">
+  <!-- Storage -->
+  <div class="dash-card">
+    <div class="dash-card-label">Spazio usato</div>
+    <div class="dash-card-value">
+      {{ "%.0f"|format(hobbista.storage_usato_mb) }} MB
+      <span style="font-size:.9rem;font-weight:400;color:var(--warm)">
+        / {{ hobbista.storage_max_mb }} MB
+      </span>
+    </div>
+    <div class="storage-bar">
+      <div class="storage-fill"
+           style="width:{{ hobbista.storage_percentuale }}%;
+                  {% if hobbista.storage_percentuale > 85 %}background:#dc2743{% endif %}">
+      </div>
+    </div>
+    <div style="font-size:.75rem;color:var(--warm);margin-top:6px">
+      {{ hobbista.storage_percentuale }}% utilizzato
+    </div>
+  </div>
+
+  <!-- Foto -->
+  <div class="dash-card">
+    <div class="dash-card-label">Foto caricate</div>
+    <div class="dash-card-value">{{ foto|length }}</div>
+    <div style="font-size:.75rem;color:var(--warm);margin-top:6px">
+      Piano
+      <strong>{{ hobbista.piano.nome if hobbista.piano else 'Base (default)' }}</strong>
+    </div>
+  </div>
+</div>
+
+<!-- Link rapidi -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px">
+  <a href="{{ url_for('artigiani.modifica_profilo') }}" class="ghost-link">
+    Modifica profilo
+  </a>
+  <a href="{{ url_for('artigiani.abbonamento') }}" class="ghost-link">
+    Il mio piano
+  </a>
+  <a href="{{ url_for('artigiani_auth.logout') }}"
+     style="font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;
+            color:var(--warm);text-decoration:none;border:1px solid var(--sand);
+            border-radius:8px;padding:8px 16px;transition:color .2s"
+     onmouseenter="this.style.color='var(--terra)'"
+     onmouseleave="this.style.color='var(--warm)'">
+    Esci
+  </a>
+</div>
+
+
+<!-- ── I MIEI MERCATINI ───────────────────────────────────────────────── -->
+<div style="margin-bottom:32px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div class="section-label">I miei mercatini</div>
+    <a href="{{ url_for('artigiani.dichiara_partecipazione') }}"
+       class="ghost-link" style="font-size:.78rem;padding:6px 12px">
+      + Dichiara partecipazione
+    </a>
+  </div>
+
+  {% if partecipazioni %}
+    <div style="display:flex;flex-direction:column;gap:10px">
+    {% for p in partecipazioni %}
+      {% set is_futuro = p.data_evento and p.data_evento >= oggi %}
+      <div style="background:#fff;border:1px solid {% if is_futuro %}var(--terra){% else %}var(--sand){% endif %};
+                  border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;
+                  opacity:{% if is_futuro %}1{% else %}.65{% endif %}">
+        <!-- Icona calendario -->
+        <div style="font-size:1.4rem;flex-shrink:0;line-height:1;padding-top:2px">
+          {% if is_futuro %}📅{% else %}🗓{% endif %}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Fraunces',serif;font-weight:700;font-size:.95rem;
+                      color:var(--ink);margin-bottom:2px">
+            {{ p.nome_evento_display }}
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:.68rem;
+                      letter-spacing:.05em;color:var(--warm);display:flex;gap:12px;flex-wrap:wrap">
+            {% if p.data_evento %}
+              <span>{{ p.data_evento.strftime('%d %b %Y') }}</span>
+            {% endif %}
+            {% if p.luogo_display %}
+              <span>📍 {{ p.luogo_display }}</span>
+            {% endif %}
+            {% if is_futuro %}
+              <span style="color:var(--terra);font-weight:700">PROSSIMO</span>
+            {% endif %}
+          </div>
+          {% if p.messaggio_breve %}
+            <div style="font-size:.78rem;color:var(--warm);margin-top:5px;
+                        font-style:italic">
+              &ldquo;{{ p.messaggio_breve }}&rdquo;
+            </div>
+          {% endif %}
+        </div>
+        {% if p.mercatino_id %}
+        <a href="{{ url_for('mercatini.dettaglio', id=p.mercatino_id) }}"
+           style="font-size:.7rem;color:var(--terra);text-decoration:none;
+                  font-family:'DM Mono',monospace;white-space:nowrap;
+                  border:1px solid var(--terra);border-radius:6px;padding:4px 8px;
+                  flex-shrink:0"
+           target="_blank">Vedi &rarr;</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align:center;padding:28px 20px;color:var(--warm);
+                border:2px dashed var(--sand);border-radius:12px;font-size:.85rem">
+      Nessuna partecipazione dichiarata ancora.
+      <a href="{{ url_for('artigiani.dichiara_partecipazione') }}"
+         style="color:var(--terra);text-decoration:underline;margin-left:4px">
+        Dichiara il primo!
+      </a>
+    </div>
+  {% endif %}
+</div>
+<!-- ── fine I MIEI MERCATINI ─────────────────────────────────────────── -->
+
+<!-- Galleria gestione -->
+<div style="display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:14px">
+  <div class="section-label">Le mie foto</div>
+  {% if foto %}
+  <span style="font-family:'DM Mono',monospace;font-size:.6rem;
+               letter-spacing:.08em;color:var(--warm)">
+    Trascina per riordinare
+  </span>
+  {% endif %}
+</div>
+
+{% if foto %}
+<div class="foto-mini-grid" id="sortable-grid">
+  {% for f in foto %}
+  <div class="foto-mini" data-id="{{ f.id }}">
+    <img src="{{ f.thumb_url }}" alt="{{ f.didascalia or '' }}" loading="lazy">
+    <form method="POST"
+          action="{{ url_for('artigiani.elimina_foto', foto_id=f.id) }}"
+          onsubmit="return confirm('Eliminare questa foto?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="foto-mini-del" title="Elimina">✕</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+// Drag & drop riordino (senza librerie esterne)
+(function() {
+  const grid = document.getElementById('sortable-grid');
+  if (!grid) return;
+  let dragging = null;
+
+  grid.querySelectorAll('.foto-mini').forEach(el => {
+    el.setAttribute('draggable', true);
+    el.addEventListener('dragstart', () => {
+      dragging = el;
+      el.style.opacity = '.4';
+    });
+    el.addEventListener('dragend', () => {
+      el.style.opacity = '1';
+      // Salva nuovo ordine
+      const ordine = {};
+      grid.querySelectorAll('.foto-mini').forEach((item, idx) => {
+        ordine[item.dataset.id] = idx;
+      });
+      fetch('{{ url_for("artigiani.riordina_foto") }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(ordine)
+      });
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (el !== dragging) {
+        const box = el.getBoundingClientRect();
+        const next = e.clientX > box.left + box.width / 2;
+        grid.insertBefore(dragging, next ? el.nextSibling : el);
+      }
+    });
+  });
+})();
+</script>
+{% else %}
+<div style="text-align:center;padding:40px 24px;color:var(--warm);
+            border:2px dashed var(--sand);border-radius:12px">
+  <p style="margin-bottom:12px">Nessuna foto ancora.</p>
+  <a href="{{ url_for('artigiani.carica_foto') }}" class="quick-link">
+    Carica le tue prime foto
+  </a>
+</div>
+{% endif %}
+
+  <!-- MODIFICA DESCRIZIONI -->
+  {% if hobbista.foto %}
+  <div style="margin-top:24px">
+    <div style="font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
+                text-transform:uppercase;color:var(--warm);margin-bottom:14px">
+      Descrizioni delle creazioni
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="did-list">
+      {% for f in hobbista.foto %}
+      <div style="display:flex;gap:12px;align-items:flex-start;
+                  background:#fff;border:1px solid var(--sand);
+                  border-radius:10px;padding:12px 14px"
+           id="did-row-{{ f.id }}">
+        <img src="{{ f.thumb_url }}" alt=""
+             style="width:52px;height:52px;object-fit:cover;border-radius:7px;
+                    flex-shrink:0;border:1px solid var(--paper2)">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text"
+                   id="did-input-{{ f.id }}"
+                   value="{{ f.didascalia or '' }}"
+                   maxlength="150"
+                   placeholder="Aggiungi una descrizione per questa creazione…"
+                   style="flex:1;border:1px solid var(--sand);border-radius:6px;
+                          padding:7px 10px;font-family:'DM Sans',sans-serif;
+                          font-size:.82rem;background:var(--paper);
+                          color:var(--ink);outline:none;min-width:0"
+                   onfocus="this.style.borderColor='var(--terra)'"
+                   onblur="this.style.borderColor='var(--sand)'">
+            <button onclick="salvaDid({{ f.id }})"
+                    id="did-btn-{{ f.id }}"
+                    style="background:var(--terra);color:#fff;border:none;
+                           border-radius:6px;padding:7px 14px;
+                           font-family:'DM Sans',sans-serif;font-size:.78rem;
+                           font-weight:600;cursor:pointer;white-space:nowrap;
+                           transition:background .2s"
+                    onmouseenter="this.style.background='var(--terra2)'"
+                    onmouseleave="this.style.background='var(--terra)'">
+              Salva
+            </button>
+          </div>
+          <div id="did-ok-{{ f.id }}"
+               style="display:none;font-size:.7rem;color:#059669;
+                      margin-top:4px;font-family:'DM Mono',monospace">
+            ✓ Salvata
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+<script>
+async function salvaDid(fotoId) {
+  const input = document.getElementById('did-input-' + fotoId);
+  const btn   = document.getElementById('did-btn-' + fotoId);
+  const ok    = document.getElementById('did-ok-' + fotoId);
+  btn.disabled = true; btn.textContent = '…';
+  const fd = new FormData();
+  fd.append('didascalia', input.value);
+  fd.append('csrf_token', document.querySelector('meta[name=csrf-token]').content);
+  try {
+    const r = await fetch('/artigiani/dashboard/foto/' + fotoId + '/didascalia', {method:'POST',body:fd});
+    const j = await r.json();
+    if (j.ok) {
+      ok.style.display = 'block';
+      setTimeout(() => ok.style.display = 'none', 2500);
+    }
+  } catch(e) { console.error(e); }
+  btn.disabled = false; btn.textContent = 'Salva';
+}
+</script>
+{% endblock %}

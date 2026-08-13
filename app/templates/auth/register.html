@@ -28,6 +28,7 @@
   </p>
 
   <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {{ form.hidden_tag() }}
 
     <div class="grid grid-cols-2 gap-3 mb-0">

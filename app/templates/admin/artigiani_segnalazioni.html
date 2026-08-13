@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Admin — Segnalazioni foto artigiani{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('admin.artigiani_lista') }}"
+   style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+          text-transform:uppercase;color:var(--warm);text-decoration:none;
+          display:inline-flex;align-items:center;gap:6px;margin-bottom:24px">
+  ← Artigiani
+</a>
+
+<div class="section-label" style="margin-bottom:8px">Admin</div>
+<h1 style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:900;
+           letter-spacing:-.03em;margin-bottom:24px">
+  Segnalazioni foto da rivedere
+</h1>
+
+{% if segnalazioni %}
+<div style="display:flex;flex-direction:column;gap:16px">
+  {% for seg in segnalazioni %}
+  <div style="background:#fff;border:1px solid var(--sand);border-radius:12px;
+              padding:18px;display:flex;gap:16px;align-items:flex-start;
+              flex-wrap:wrap">
+    <img src="{{ seg.foto.thumb_url }}" alt=""
+         style="width:80px;height:80px;object-fit:cover;border-radius:8px;
+                flex-shrink:0;border:1px solid var(--sand)">
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:600;margin-bottom:4px">
+        Foto #{{ seg.foto_id }} —
+        <a href="{{ url_for('artigiani.profilo', hobbista_id=seg.foto.account_id) }}"
+           target="_blank" style="color:var(--terra)">
+          {{ seg.foto.account.nome_visualizzato }}
+        </a>
+      </div>
+      <div style="font-size:.82rem;color:var(--warm);margin-bottom:8px">
+        Segnalato il {{ seg.data_segnalazione.strftime('%d/%m/%Y %H:%M') }}
+      </div>
+      <div style="font-size:.88rem;background:var(--paper2);border-radius:8px;
+                  padding:10px 12px;color:var(--ink)">
+        "{{ seg.motivo }}"
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:140px">
+      <form method="POST"
+            action="{{ url_for('admin.artigiani_gestisci_segnalazione', seg_id=seg.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="azione" value="rimuovi">
+        <button type="submit"
+                onclick="return confirm('Rimuovere questa foto definitivamente?')"
+                style="width:100%;background:#FEF2F2;color:#991B1B;border:1px solid #FCA5A5;
+                       border-radius:8px;padding:8px;font-size:.82rem;cursor:pointer;
+                       font-family:'DM Sans',sans-serif;font-weight:600">
+          Rimuovi foto
+        </button>
+      </form>
+      <form method="POST"
+            action="{{ url_for('admin.artigiani_gestisci_segnalazione', seg_id=seg.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="azione" value="ok">
+        <button type="submit"
+                style="width:100%;background:var(--paper2);color:var(--warm);
+                       border:1px solid var(--sand);border-radius:8px;padding:8px;
+                       font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif">
+          Non problematica
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center;padding:60px 24px;color:var(--warm)">
+  Nessuna segnalazione aperta.
+</div>
+{% endif %}
+{% endblock %}

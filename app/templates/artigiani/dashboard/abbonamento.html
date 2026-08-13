@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Il mio piano — Dashboard Artigiano{% endblock %}
+
+{% block content %}
+<style>
+  .piano-card {
+    background:#fff;border:1px solid var(--sand);border-radius:12px;
+    padding:24px;flex:1;min-width:200px;max-width:260px;position:relative;
+    transition:box-shadow .2s;
+  }
+  .piano-card.attuale {
+    border-color:var(--terra);
+    box-shadow:0 0 0 2px rgba(192,82,42,.15);
+  }
+  .piano-card-badge {
+    position:absolute;top:-10px;right:16px;
+    background:var(--terra);color:#fff;
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
+    text-transform:uppercase;padding:3px 10px;border-radius:100px;
+  }
+  .piano-nome { font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;margin-bottom:4px; }
+  .piano-prezzo { font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;color:var(--terra);margin-bottom:12px; }
+  .piano-storage { font-size:.82rem;color:var(--warm);margin-bottom:16px;line-height:1.5; }
+  .btn-piano {
+    display:block;text-align:center;
+    font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;
+    color:#fff;background:var(--terra);border:none;border-radius:8px;
+    padding:10px;cursor:pointer;transition:background .2s;width:100%;
+  }
+  .btn-piano:hover{background:var(--terra2)}
+  .btn-piano-disabled{background:var(--sand);color:var(--warm);cursor:default;}
+  .btn-piano-disabled:hover{background:var(--sand)}
+</style>
+
+<a href="{{ url_for('artigiani.dashboard') }}"
+   style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+          text-transform:uppercase;color:var(--warm);text-decoration:none;
+          display:inline-flex;align-items:center;gap:6px;margin-bottom:28px">
+  ← Dashboard
+</a>
+
+<div class="section-label" style="margin-bottom:10px">Abbonamento</div>
+<h1 style="font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;
+           letter-spacing:-.03em;margin-bottom:6px">Il tuo piano</h1>
+
+<!-- Piano attuale -->
+<div style="background:var(--paper2);border-radius:10px;padding:18px 20px;margin-bottom:32px">
+  <div style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.08em;
+              text-transform:uppercase;color:var(--warm);margin-bottom:6px">Piano attivo</div>
+  <div style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700">
+    {{ hobbista.piano.nome if hobbista.piano else 'Base (default)' }}
+  </div>
+  <div style="font-size:.82rem;color:var(--warm);margin-top:4px">
+    {{ hobbista.storage_usato_mb|round(1) }} MB usati su {{ hobbista.storage_max_mb }} MB
+    ({{ hobbista.storage_percentuale }}%)
+  </div>
+  {% set abb = hobbista.abbonamento_attivo %}
+  {% if abb %}
+  <div style="font-size:.78rem;color:var(--warm);margin-top:4px">
+    Scadenza: <strong>{{ abb.data_scadenza.strftime('%d/%m/%Y') }}</strong>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Piani disponibili -->
+<div class="section-label" style="margin-bottom:14px">Tutti i piani</div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:32px">
+  {% for piano in piani %}
+  <div class="piano-card {{ 'attuale' if hobbista.piano_id == piano.id else '' }}">
+    {% if hobbista.piano_id == piano.id %}
+    <div class="piano-card-badge">Attivo</div>
+    {% endif %}
+    <div class="piano-nome">{{ piano.nome }}</div>
+    <div class="piano-prezzo">€{{ piano.prezzo_mensile_eur }}/mese</div>
+    <div class="piano-storage">
+      <strong>{{ piano.storage_max_mb }} MB</strong> di spazio<br>
+      (~{{ (piano.storage_max_mb / 3)|int }}–{{ (piano.storage_max_mb / 2)|int }} foto compresse)
+    </div>
+    {% if hobbista.piano_id == piano.id %}
+      <button class="btn-piano btn-piano-disabled" disabled>Piano attuale</button>
+    {% elif piano.stripe_price_id %}
+      <form method="POST"
+            action="{{ url_for('artigiani.abbonamento_checkout', piano_id=piano.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-piano">
+          {% if hobbista.piano_id and piano.prezzo_mensile_eur > hobbista.piano.prezzo_mensile_eur %}
+            Upgrade a {{ piano.nome }}
+          {% else %}
+            Scegli {{ piano.nome }}
+          {% endif %}
+        </button>
+      </form>
+    {% else %}
+      <button class="btn-piano btn-piano-disabled" disabled title="Prossimamente">
+        Disponibile presto
+      </button>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Info pagamenti -->
+<div style="padding:14px 18px;background:var(--paper2);border-radius:10px;
+            font-size:.8rem;color:var(--warm);line-height:1.6">
+  💳 I pagamenti sono gestiti in modo sicuro da <strong>Stripe</strong>.
+  Puoi cancellare in qualsiasi momento.
+  Per assistenza scrivi su
+  <a href="https://wa.me/393279515301" style="color:var(--terra);font-weight:600">WhatsApp</a>.
+</div>
+{% endblock %}

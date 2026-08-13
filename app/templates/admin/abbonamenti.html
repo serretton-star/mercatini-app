@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Abbonamenti - Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-bold text-secondary">Abbonamenti</h1>
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="text-sm text-primary hover:underline">← Admin</a>
+  </div>
+
+  <!-- ATTIVI -->
+  <section>
+    <h2 class="font-semibold text-secondary mb-3">
+      Abbonamenti attivi
+      <span class="ml-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">
+        {{ attivi|length }}
+      </span>
+    </h2>
+    {% if not attivi %}
+    <p class="text-sm text-gray-400 italic">Nessun abbonamento attivo.</p>
+    {% else %}
+    <div class="overflow-x-auto bg-white rounded-xl shadow-sm">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+          <tr>
+            <th class="px-4 py-3 text-left">Utente</th>
+            <th class="px-4 py-3 text-left">Email</th>
+            <th class="px-4 py-3 text-left">Piano</th>
+            <th class="px-4 py-3 text-left">Scadenza</th>
+            <th class="px-4 py-3 text-left">Giorni rimasti</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for u in attivi %}
+          {% set giorni = (u.abbonamento_scadenza - now).days %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium text-secondary">{{ u.nome_completo }}</td>
+            <td class="px-4 py-3 text-gray-500">{{ u.email }}</td>
+            <td class="px-4 py-3">
+              <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ u.piano_abbonamento | upper }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-700">
+              {{ u.abbonamento_scadenza.strftime('%d/%m/%Y') }}
+            </td>
+            <td class="px-4 py-3">
+              <span class="font-semibold {% if giorni <= 7 %}text-red-500{% elif giorni <= 30 %}text-yellow-600{% else %}text-green-600{% endif %}">
+                {{ giorni }}gg
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- SCADUTI RECENTI -->
+  <section>
+    <h2 class="font-semibold text-secondary mb-3">
+      Scaduti di recente (ultimi 30gg)
+      <span class="ml-2 bg-orange-100 text-orange-600 text-xs font-bold px-2 py-0.5 rounded-full">
+        {{ scaduti_recenti|length }}
+      </span>
+    </h2>
+    {% if not scaduti_recenti %}
+    <p class="text-sm text-gray-400 italic">Nessun abbonamento scaduto di recente.</p>
+    {% else %}
+    <div class="overflow-x-auto bg-white rounded-xl shadow-sm">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+          <tr>
+            <th class="px-4 py-3 text-left">Utente</th>
+            <th class="px-4 py-3 text-left">Email</th>
+            <th class="px-4 py-3 text-left">Piano</th>
+            <th class="px-4 py-3 text-left">Scaduto il</th>
+            <th class="px-4 py-3 text-left">Giorni fa</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for u in scaduti_recenti %}
+          {% set giorni_fa = (now - u.abbonamento_scadenza).days %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium text-secondary">{{ u.nome_completo }}</td>
+            <td class="px-4 py-3 text-gray-500">{{ u.email }}</td>
+            <td class="px-4 py-3">
+              <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ u.piano_abbonamento | upper }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-700">
+              {{ u.abbonamento_scadenza.strftime('%d/%m/%Y') }}
+            </td>
+            <td class="px-4 py-3 text-orange-500 font-semibold">{{ giorni_fa }}gg fa</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

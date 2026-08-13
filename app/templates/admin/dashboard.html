@@ -86,6 +86,44 @@
     {% endfor %}
   </div>
 
+
+  <!-- QUICK LINKS -->
+  <div class="grid grid-cols-2 gap-3">
+    <a href="{{ url_for('admin.abbonamenti') }}"
+       class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+      <span class="text-2xl">&#x1F4B3;</span>
+      <div>
+        <p class="text-sm font-semibold text-secondary">Abbonamenti</p>
+        <p class="text-xs text-gray-400">Attivi e scaduti recenti</p>
+      </div>
+    </a>
+    <a href="{{ url_for('admin.landing_stats') }}"
+       class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+      <span class="text-2xl">&#x1F4CA;</span>
+      <div>
+        <p class="text-sm font-semibold text-secondary">Landing Stats</p>
+        <p class="text-xs text-gray-400">Visite alla pagina landing</p>
+      </div>
+    </a>
+  </div>
+
+  <!-- CRAWLER BUTTON -->
+  <form method="POST" action="{{ url_for('admin.esegui_crawler') }}" class="mt-1">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit"
+            class="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-3
+                   hover:shadow-md transition-shadow text-left group">
+      <span class="text-2xl group-hover:animate-spin">🤖</span>
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-secondary">Avvia Crawler ora</p>
+        <p class="text-xs text-gray-400">Cerca nuovi mercatini e aggiunge bozze</p>
+      </div>
+      <span class="text-xs text-orange-500 font-medium bg-orange-50 px-2 py-1 rounded-full">
+        ▶ Esegui
+      </span>
+    </button>
+  </form>
+
   <!-- CATEGORIE -->
   <section class="bg-white rounded-xl shadow-sm p-4">
     <h2 class="font-semibold text-secondary mb-3">Categorie ({{ categorie|length }})</h2>
@@ -134,6 +172,9 @@
           </p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
+          {% if m.id in id_doppioni %}
+          <span class="text-xs bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded">⚠️ doppione</span>
+          {% endif %}
           <span class="text-xs {% if m.pubblicato %}text-green-600{% else %}text-yellow-500{% endif %}">
             {{ 'pub' if m.pubblicato else 'bozza' }}
           </span>
@@ -147,6 +188,17 @@
           </form>
           <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
              class="text-xs text-primary hover:underline">Vedi</a>
+          <a href="{{ url_for('mercatini.modifica', id=m.id) }}"
+             class="text-xs text-blue-500 hover:underline">Modifica</a>
+          <form method="POST" action="{{ url_for('admin.elimina_mercatino', id=m.id) }}"
+                onsubmit="return confirm('Eliminare questo evento definitivamente?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="text-xs text-red-500 border border-red-200 px-2 py-1
+                           rounded-lg hover:bg-red-50 transition-colors">
+              Elimina
+            </button>
+          </form>
         </div>
       </div>
       {% endfor %}

@@ -1,6 +1,7 @@
 from datetime import date
 from flask import render_template
 from app.models import Mercatino
+from app.models.user import User
 from app.main import main
 
 
@@ -34,8 +35,22 @@ def index():
         .order_by(Mercatino.data_inizio.asc()).limit(6).all()
     )
     totale = Mercatino.query.filter_by(pubblicato=True).count()
+    utenti = User.query.count()
+    # Artigiani hobbisti in vetrina
+    try:
+        from app.models.hobbisti import HobbistaAccount, StatoHobbista
+        hobbisti_attivi = (
+            HobbistaAccount.query
+            .filter_by(stato=StatoHobbista.attivo)
+            .order_by(HobbistaAccount.data_registrazione.desc())
+            .limit(6).all()
+        )
+    except Exception:
+        hobbisti_attivi = []
     return render_template('main/index.html',
-                           in_corso=in_corso, prossimi=prossimi, totale=totale)
+                           in_corso=in_corso, prossimi=prossimi,
+                           totale=totale, utenti=utenti,
+                           hobbisti_attivi=hobbisti_attivi)
 
 
 @main.route('/privacy')
@@ -54,3 +69,26 @@ def not_found(e):
 @main.app_errorhandler(500)
 def server_error(e):
     return render_template('errors/500.html'), 500
+
+
+@main.route('/landing')
+def landing():
+    from flask import request as _req
+    try:
+        from app.models.landing import LandingVisit
+        LandingVisit.log_visit(_req)
+    except Exception:
+        pass
+        # Primo artigiano attivo per card landing
+    try:
+        from app.models.hobbisti import HobbistaAccount, StatoHobbista
+        primo_artigiano = (
+            HobbistaAccount.query
+            .filter_by(stato=StatoHobbista.attivo)
+            .order_by(HobbistaAccount.data_registrazione.desc())
+            .first()
+        )
+    except Exception:
+        primo_artigiano = None
+    return render_template('main/landing.html',
+                           primo_artigiano=primo_artigiano)

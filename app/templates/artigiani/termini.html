@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Termini di Servizio Artigiani — mercatini.blog{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto">
+  <div class="section-label" style="margin-bottom:12px">Artigiani Hobbisti</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:900;
+              letter-spacing:-.03em;margin-bottom:8px">
+    Termini di Servizio
+  </h1>
+  <p style="color:var(--warm);font-size:.88rem;margin-bottom:32px">
+    Ultima revisione: agosto 2026
+  </p>
+
+  {# TODO: testo da rivedere con consulenza legale prima del go-live #}
+
+  <div style="line-height:1.75;color:var(--ink)">
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">1. Natura del servizio</h2>
+    <p>
+      mercatini.blog mette a disposizione degli artigiani hobbisti uno spazio di
+      <strong>vetrina digitale</strong>: un profilo pubblico con galleria fotografica
+      e contatti. La piattaforma <strong>non gestisce, non facilita e non
+      intermediarisce</strong> vendite, pagamenti o transazioni commerciali tra utenti.
+      Qualsiasi contatto, accordo o scambio avviene esclusivamente e privatamente
+      tra le parti interessate, al di fuori di mercatini.blog.
+    </p>
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">2. Contenuti caricati</h2>
+    <p>
+      Caricando foto e contenuti sul profilo, l'artigiano dichiara di essere
+      <strong>titolare dei diritti</strong> sulle immagini e sulle creazioni
+      rappresentate, ovvero di disporre delle necessarie autorizzazioni.
+      L'artigiano è il solo responsabile della liceità, veridicità e correttezza
+      dei contenuti pubblicati.
+    </p>
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">3. Contenuti originali propri</h2>
+    <p>
+      L'artigiano si impegna a caricare esclusivamente fotografie delle proprie
+      creazioni originali. È vietato pubblicare immagini di prodotti di terzi,
+      materiale protetto da copyright altrui o contenuti di natura illecita,
+      offensiva o ingannevole.
+    </p>
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">4. Moderazione e rimozione contenuti</h2>
+    <p>
+      mercatini.blog si riserva il diritto di rimuovere o nascondere contenuti
+      che risultino segnalati come non conformi, potenzialmente illeciti o lesivi
+      di diritti di terzi, anche senza preavviso e senza che ciò comporti
+      responsabilità per la piattaforma. In caso di violazioni gravi o reiterate,
+      l'account potrà essere sospeso.
+    </p>
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">5. Responsabilità fiscale</h2>
+    <p>
+      L'artigiano è responsabile in via esclusiva della regolarità fiscale e
+      amministrativa della propria attività. mercatini.blog <strong>non costituisce
+      in alcun modo</strong> un'attestazione di regolarità o liceità dell'attività
+      svolta, né conferisce autorizzazioni di alcun tipo all'esercizio di
+      attività commerciali o artigianali.
+    </p>
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">6. Privacy e dati personali</h2>
+    <p>
+      I dati raccolti (nome, email, contatti opzionali) sono trattati per la
+      gestione del profilo e del rapporto contrattuale, nel rispetto del GDPR.
+      Per informazioni complete consulta la
+      <a href="{{ url_for('main.privacy') }}" style="color:var(--terra)">
+        Privacy Policy di mercatini.blog</a>.
+    </p>
+
+    <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;
+               margin:28px 0 10px">7. Aggiornamenti ai termini</h2>
+    <p>
+      mercatini.blog si riserva di aggiornare i presenti termini. Gli utenti
+      registrati saranno informati via email. L'uso continuato del servizio
+      successivamente alla pubblicazione degli aggiornamenti implica
+      l'accettazione delle modifiche.
+    </p>
+
+    <div style="margin-top:40px;padding:20px;background:var(--paper2);
+                border-radius:10px;border-left:3px solid var(--terra)">
+      <p style="margin:0;font-size:.88rem;color:var(--warm)">
+        Per domande su questi termini scrivi a
+        <a href="https://wa.me/393279515301" style="color:var(--terra)">
+          assistenza WhatsApp</a>.
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

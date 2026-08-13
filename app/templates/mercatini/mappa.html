@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Mappa Mercatini — Mercatini Artigianali Italia{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+  #map { height: calc(100vh - 140px); min-height: 480px; width: 100%; }
+  .leaflet-popup-content { min-width: 190px; max-width: 270px; }
+  .pu-title { font-weight:700; font-size:.9rem; color:#1e293b; margin-bottom:5px; }
+  .pu-ev { border-top:1px solid #e2e8f0; padding:4px 0; }
+  .pu-ev:first-of-type { border-top:none; padding-top:0; }
+  .pu-ev a { color:#7c3aed; font-weight:600; font-size:.82rem; text-decoration:none; }
+  .pu-ev a:hover { text-decoration:underline; }
+  .pu-date { color:#64748b; font-size:.75rem; }
+  .legend { background:#fff; padding:8px 12px; border-radius:8px;
+            box-shadow:0 1px 5px rgba(0,0,0,.2); font-size:.78rem; line-height:1.7; }
+  .leg-row { display:flex; align-items:center; gap:6px; }
+  .leg-dot { border-radius:50%; border:2px solid rgba(0,0,0,.25); flex-shrink:0; }
+  #map-wrap { border-radius:0 0 .75rem .75rem; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.1); }
+  #map-head { background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff;
+              padding:10px 18px; display:flex; align-items:center; gap:10px;
+              border-radius:.75rem .75rem 0 0; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  #map-head h1 { font-size:1rem; font-weight:700; margin:0; }
+  .badge { background:rgba(255,255,255,.2); padding:1px 10px; border-radius:999px; font-size:.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-3 py-4">
+  <div id="map-head">
+    <span style="font-size:1.5rem">🗺️</span>
+    <div>
+      <h1>Mappa Mercatini Artigianali</h1>
+      <div style="font-size:.78rem;opacity:.85">Tutti gli eventi attivi in Italia</div>
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      <span class="badge" id="ev-count">{{ totale }} eventi</span>
+      <a href="{{ url_for('mercatini.index') }}" style="color:#fff;font-size:.82rem;opacity:.8">← Lista</a>
+    </div>
+  </div>
+  <div id="map-wrap">
+    <div id="map"></div>
+  </div>
+  <p style="font-size:.72rem;color:#94a3b8;text-align:center;margin-top:6px">
+    © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  var map = L.map('map',{center:[42.0,12.5],zoom:6});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+  function color(n){ return n>=4?'#ef4444':n>=2?'#f59e0b':'#7c3aed'; }
+
+  function groupBy(evs){
+    var g={};
+    evs.forEach(function(e){
+      var k=Math.round(e.lat*8)+','+Math.round(e.lon*8);
+      if(!g[k]) g[k]={lat:e.lat,lon:e.lon,citta:e.citta,evs:[]};
+      g[k].evs.push(e);
+    });
+    return Object.values(g);
+  }
+
+  function popup(g){
+    var h='<div class="pu-title">📍 '+g.citta+'</div>';
+    g.evs.forEach(function(e){
+      var d=e.d_ini+(e.d_fin?' – '+e.d_fin:'');
+      h+='<div class="pu-ev"><a href="'+e.url+'" target="_blank">'+e.titolo+'</a>'
+        +'<div class="pu-date">📅 '+d+'</div></div>';
+    });
+    return h;
+  }
+
+  var legend=L.control({position:'bottomright'});
+  legend.onAdd=function(){
+    var d=L.DomUtil.create('div','legend');
+    d.innerHTML='<b>N° eventi</b><br>'
+      +'<div class="leg-row"><div class="leg-dot" style="width:12px;height:12px;background:#7c3aed"></div>1</div>'
+      +'<div class="leg-row"><div class="leg-dot" style="width:16px;height:16px;background:#f59e0b"></div>2-3</div>'
+      +'<div class="leg-row"><div class="leg-dot" style="width:20px;height:20px;background:#ef4444"></div>4+</div>';
+    return d;
+  };
+  legend.addTo(map);
+
+  fetch('{{ url_for("mercatini.mappa_data") }}')
+    .then(function(r){return r.json();})
+    .then(function(evs){
+      document.getElementById('ev-count').textContent=evs.length+' eventi';
+      groupBy(evs).forEach(function(g){
+        var n=g.evs.length, r=Math.min(8+n*4,24);
+        L.circleMarker([g.lat,g.lon],{
+          radius:r, fillColor:color(n), color:'#fff',
+          weight:2, fillOpacity:0.85
+        }).addTo(map)
+          .bindPopup(popup(g),{maxWidth:280})
+          .bindTooltip(n>1?String(n):'',{permanent:true,direction:'center',
+            className:'lbl'});
+      });
+    });
+})();
+</script>
+<style>
+.lbl{background:transparent!important;border:none!important;box-shadow:none!important;
+     color:#fff!important;font-weight:700!important;font-size:.72rem!important;padding:0!important;}
+.lbl::before{display:none!important;}
+</style>
+{% endblock %}

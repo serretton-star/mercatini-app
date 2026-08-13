@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% block title %}{{ hobbista.nome_visualizzato }} — Artigiano su mercatini.blog
+<script>
+const _CSRF = document.querySelector('meta[name=csrf-token]')?.content || '';
+async function toggleSegui(hobbistaId, attualmenteSeguendo) {
+  const btn = document.getElementById('btn-segui');
+  btn.disabled = true;
+  const endpoint = attualmenteSeguendo
+    ? `/artigiani/${hobbistaId}/smetti-di-seguire`
+    : `/artigiani/${hobbistaId}/segui`;
+  try {
+    const fd = new FormData();
+    fd.append('csrf_token', _CSRF);
+    const r = await fetch(endpoint, {method:'POST', body:fd});
+    const j = await r.json();
+    if ('seguendo' in j) {
+      if (j.seguendo) {
+        btn.className = 'btn-segui-on';
+        btn.textContent = '✓ Stai seguendo';
+        btn.setAttribute('onclick', `toggleSegui(${hobbistaId}, true)`);
+      } else {
+        btn.className = 'btn-segui';
+        btn.textContent = '+ Segui';
+        btn.setAttribute('onclick', `toggleSegui(${hobbistaId}, false)`);
+      }
+    }
+  } catch(e) { console.error(e); }
+  btn.disabled = false;
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .profilo-header {
+    display: flex; align-items: flex-start; gap: 24px;
+    margin-bottom: 36px; flex-wrap: wrap;
+  }
+  .profilo-cover {
+    width: 110px; height: 110px; border-radius: 12px;
+    object-fit: cover; border: 2px solid var(--sand); flex-shrink: 0;
+  }
+  .profilo-cover-placeholder {
+    width: 110px; height: 110px; border-radius: 12px;
+    background: var(--paper2); border: 2px solid var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; color: var(--sand); flex-shrink: 0;
+  }
+  .profilo-info { flex: 1; min-width: 200px; }
+  .profilo-nome {
+    font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 900;
+    letter-spacing: -.03em; margin-bottom: 4px;
+  }
+  .profilo-comune {
+    font-family: 'DM Mono', monospace; font-size: .65rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--warm); margin-bottom: 12px;
+  }
+  .profilo-bio { font-size: .92rem; color: var(--ink); line-height: 1.65; }
+  .cta-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .btn-wa {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #25D366; color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 600;
+    border-radius: 8px; padding: 9px 16px; text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-wa:hover { background: #1ebe5d; }
+  .btn-tg {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #2AABEE; color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 600;
+    border-radius: 8px; padding: 9px 16px; text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-tg:hover { background: #1a9bde; }
+  .btn-ig {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 600;
+    border-radius: 8px; padding: 9px 16px; text-decoration: none;
+  }
+
+  /* ── SCHEDE PRODOTTO ── */
+  .schede-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .scheda {
+    background: #fff;
+    border: 1px solid var(--sand);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow .2s, border-color .2s;
+    cursor: pointer;
+  }
+  .scheda:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,.09);
+    border-color: var(--terra);
+  }
+  .scheda-photo {
+    width: 100%; aspect-ratio: 1;
+    object-fit: cover; display: block;
+    background: var(--paper2);
+  }
+  .scheda-body {
+    padding: 12px 14px 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1;
+  }
+  .scheda-did {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem; color: var(--ink);
+    line-height: 1.55; flex: 1;
+  }
+  .scheda-did-vuota {
+    font-size: .78rem; color: var(--sand);
+    font-style: italic; flex: 1;
+  }
+  .scheda-footer {
+    display: flex; align-items: center; justify-content: flex-end;
+    border-top: 1px solid var(--paper2); padding-top: 8px;
+  }
+  .segnala-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: 'DM Mono', monospace; font-size: .55rem;
+    letter-spacing: .06em; color: var(--sand); text-transform: uppercase;
+    padding: 2px 0; transition: color .2s;
+  }
+  .segnala-btn:hover { color: var(--terra); }
+
+  .vetrina-disclaimer {
+    margin-top: 40px; padding: 14px 18px;
+    background: var(--paper2); border-radius: 10px;
+    font-size: .76rem; color: var(--warm); line-height: 1.6;
+    border-left: 3px solid var(--sand);
+  }
+
+  .btn-segui {
+    display:inline-flex; align-items:center; gap:7px;
+    background:transparent; color:var(--terra);
+    border:1.5px solid var(--terra);
+    font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:600;
+    border-radius:8px; padding:9px 16px; cursor:pointer;
+    text-decoration:none; transition:.2s;
+  }
+  .btn-segui:hover { background:var(--terra); color:#fff; }
+  .btn-segui-on {
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--terra); color:#fff;
+    border:1.5px solid var(--terra);
+    font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:600;
+    border-radius:8px; padding:9px 16px; cursor:pointer; transition:.2s;
+  }
+  .btn-segui-on:hover { background:#A04420; border-color:#A04420; }
+</style>
+
+<a href="{{ url_for('artigiani.elenco') }}"
+   style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+          text-transform:uppercase;color:var(--warm);text-decoration:none;
+          display:inline-flex;align-items:center;gap:6px;margin-bottom:24px">
+  ← Tutti gli artigiani
+</a>
+
+<!-- Header profilo -->
+<div class="profilo-header">
+  {% if hobbista.foto_di_copertina %}
+  <img src="{{ hobbista.foto_di_copertina.thumb_url }}"
+       alt="{{ hobbista.nome_visualizzato|e }}" class="profilo-cover">
+  {% else %}
+  <div class="profilo-cover-placeholder">✦</div>
+
+
+  {% endif %}
+
+  <div class="profilo-info">
+    <div class="profilo-nome">{{ hobbista.nome_visualizzato }}</div>
+    {% if hobbista.comune %}
+    <div class="profilo-comune">{{ hobbista.comune }}</div>
+    {% endif %}
+    {% if hobbista.bio_breve %}
+    <div class="profilo-bio">{{ hobbista.bio_breve }}</div>
+    {% endif %}
+
+    <div class="cta-group">
+      {% if hobbista.whatsapp_url %}
+      <a href="{{ hobbista.whatsapp_url }}" target="_blank" rel="noopener" class="btn-wa">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.522 5.855L.057 23.5a.75.75 0 00.916.948l5.85-1.53A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.694-.5-5.24-1.375l-.374-.22-3.878 1.016 1.034-3.772-.242-.386A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        Scrivimi su WhatsApp
+      </a>
+      {% endif %}
+      {% if hobbista.telegram_handle %}
+      <a href="https://t.me/{{ hobbista.telegram_handle.lstrip('@') }}"
+         target="_blank" rel="noopener" class="btn-tg">Contattami su Telegram</a>
+      {% endif %}
+      {% if hobbista.instagram_url %}
+      <a href="{{ hobbista.instagram_url }}" target="_blank" rel="noopener" class="btn-ig">
+        Seguimi su Instagram
+      </a>
+      {% endif %}
+
+      {# ── Segui / Smetti di seguire ── #}
+      {% if current_user.is_authenticated %}
+      <button id="btn-segui"
+              class="{{ 'btn-segui-on' if is_following else 'btn-segui' }}"
+              onclick="toggleSegui({{ hobbista.id }}, {{ 'true' if is_following else 'false' }})">
+        {{ '✓ Stai seguendo' if is_following else '+ Segui' }}
+      </button>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}?next={{ request.path }}" class="btn-segui">
+        + Segui
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<!-- ── PROSSIMI MERCATINI ──────────────────────────────────────────────── -->
+{% if partecipazioni_attive %}
+<div class="profilo-section" style="margin-top:32px">
+  <div class="section-label" style="margin-bottom:14px">
+    📅 Prossimi mercatini
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+  {% for p in partecipazioni_attive %}
+    <div style="background:#fff;border:1px solid var(--terra);border-radius:10px;
+                padding:14px 16px;display:flex;gap:12px;align-items:center">
+      <div style="flex-shrink:0;text-align:center;min-width:44px">
+        <div style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:900;
+                    color:var(--terra);line-height:1">
+          {{ p.data_evento.strftime('%d') }}
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:.6rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm)">
+          {{ p.data_evento.strftime('%b') }}
+        </div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.9rem;color:var(--ink);
+                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          {{ p.nome_evento_display }}
+        </div>
+        {% if p.luogo_display %}
+        <div style="font-size:.75rem;color:var(--warm);font-family:'DM Mono',monospace;
+                    margin-top:2px">
+          📍 {{ p.luogo_display }}
+        </div>
+        {% endif %}
+        {% if p.messaggio_breve %}
+        <div style="font-size:.76rem;color:var(--warm);margin-top:3px;font-style:italic">
+          {{ p.messaggio_breve }}
+        </div>
+        {% endif %}
+      </div>
+      {% if p.mercatino_id %}
+      <a href="{{ url_for('mercatini.dettaglio', id=p.mercatino_id) }}"
+         style="flex-shrink:0;font-size:.7rem;color:var(--terra);
+                font-family:'DM Mono',monospace;text-decoration:none;
+                border:1px solid var(--terra);border-radius:6px;
+                padding:4px 8px;white-space:nowrap"
+         target="_blank">Vedi &rarr;</a>
+      {% endif %}
+    </div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+<!-- ── fine PROSSIMI MERCATINI ──────────────────────────────────────────── -->
+
+<!-- Schede prodotti -->
+{% if foto %}
+<div class="section-label" style="margin-bottom:4px">Galleria</div>
+<div class="schede-grid">
+  {% for f in foto %}
+  <div class="scheda">
+    <img src="{{ f.url }}"
+         alt="{{ f.didascalia or (hobbista.nome_visualizzato + ' — creazione')|e }}"
+         class="scheda-photo" loading="lazy"
+         onclick="apriLightbox('{{ f.url }}','{{ f.didascalia|default('')|e }}')">
+    <div class="scheda-body">
+      {% if f.didascalia %}
+      <p class="scheda-did">{{ f.didascalia }}</p>
+      {% else %}
+      <p class="scheda-did-vuota">Nessuna descrizione</p>
+      {% endif %}
+      <div class="scheda-footer">
+        <button class="segnala-btn" onclick="event.stopPropagation();apriSegnalazione({{ f.id }})">
+          Segnala
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center;padding:48px;color:var(--warm)">
+  Nessuna foto ancora caricata.
+</div>
+{% endif %}
+
+<!-- Disclaimer legale -->
+<div class="vetrina-disclaimer">
+  Le creazioni mostrate sono opera di <a href="{{ url_for('artigiani.termini') }}"
+  style="color:var(--warm)">artigiani hobbisti</a>. Eventuali contatti, accordi o acquisti
+  avvengono privatamente tra le parti, al di fuori della piattaforma mercatini.blog,
+  che svolge esclusivamente funzione di vetrina.
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(14,12,10,.92);align-items:center;justify-content:center;
+  flex-direction:column;gap:16px" onclick="chiudiLightbox()">
+  <img id="lb-img" src="" alt=""
+       style="max-width:90vw;max-height:82vh;border-radius:8px;object-fit:contain">
+  <div id="lb-cap" style="color:rgba(255,255,255,.85);font-size:.88rem;
+       font-family:'DM Sans',sans-serif;max-width:500px;text-align:center;
+       line-height:1.5;padding:0 24px"></div>
+</div>
+
+<!-- Modal segnalazione -->
+<div id="modal-segnala" style="display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(14,12,10,.5);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:400px;
+              width:90%;box-shadow:0 12px 48px rgba(0,0,0,.2)">
+    <h3 style="font-family:'Fraunces',serif;font-size:1.1rem;margin-bottom:12px">
+      Segnala contenuto
+    </h3>
+    <form id="form-segnala" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="foto_id" id="seg-foto-id">
+      <textarea name="motivo" rows="3" required maxlength="500"
+        placeholder="Descrivi brevemente il problema…"
+        style="width:100%;border:1px solid var(--sand);border-radius:8px;
+               padding:10px 12px;font-family:'DM Sans',sans-serif;
+               font-size:.85rem;resize:vertical"></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button type="submit"
+                style="flex:1;background:var(--terra);color:#fff;border:none;
+                       border-radius:8px;padding:9px;font-weight:600;cursor:pointer">
+          Invia segnalazione
+        </button>
+        <button type="button" onclick="chiudiModal()"
+                style="flex:1;background:var(--paper2);color:var(--ink);border:none;
+                       border-radius:8px;padding:9px;cursor:pointer">
+          Annulla
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function apriLightbox(url, cap) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb-cap').textContent = cap;
+  document.getElementById('lightbox').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function chiudiLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function apriSegnalazione(fotoId) {
+  document.getElementById('seg-foto-id').value = fotoId;
+  document.getElementById('form-segnala').action =
+    '{{ url_for("artigiani.segnala", hobbista_id=hobbista.id) }}';
+  document.getElementById('modal-segnala').style.display = 'flex';
+}
+function chiudiModal() {
+  document.getElementById('modal-segnala').style.display = 'none';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { chiudiLightbox(); chiudiModal(); }
+});
+</script>
+{% endblock %}

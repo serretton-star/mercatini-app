@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Dichiara partecipazione — Dashboard artigiano{% endblock %}
+
+{% block content %}
+<style>
+  .dp-card { background:#fff; border:1px solid var(--sand); border-radius:14px; padding:28px 32px; max-width:600px; margin:0 auto; }
+  .dp-title { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:800; color:var(--ink); margin-bottom:6px; }
+  .dp-sub   { font-size:.82rem; color:var(--warm); margin-bottom:24px; }
+  .dp-label { font-size:.78rem; font-weight:600; color:var(--ink); margin-bottom:6px; display:block; }
+  .dp-input { width:100%; border:1px solid var(--sand); border-radius:8px; padding:10px 12px; font-size:.88rem; color:var(--ink); font-family:'DM Sans',sans-serif; box-sizing:border-box; }
+  .dp-input:focus { outline:none; border-color:var(--terra); }
+  .dp-sep   { display:flex; align-items:center; gap:10px; color:var(--sand); font-size:.72rem; font-family:'DM Mono',monospace; letter-spacing:.08em; text-transform:uppercase; margin:20px 0; }
+  .dp-sep::before,.dp-sep::after { content:''; flex:1; height:1px; background:var(--sand); }
+  .dp-btn   { background:var(--terra); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .2s; }
+  .dp-btn:hover { background:#A04420; }
+  .mercatino-option { padding:6px 0; font-size:.85rem; }
+</style>
+
+<a href="{{ url_for('artigiani.dashboard') }}" style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--warm);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px">← Dashboard</a>
+
+<div class="dp-card">
+  <div class="dp-title">📅 Dichiara partecipazione</div>
+  <div class="dp-sub">Avvisa i tuoi follower che sarai presente a un mercatino o evento.</div>
+
+  <form method="POST" action="{{ url_for('artigiani.dichiara_partecipazione') }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- Opzione A: mercatino a catalogo -->
+    <label class="dp-label">Scegli un mercatino dal catalogo (opzionale)</label>
+    <select name="mercatino_id" class="dp-input" id="sel-mercatino" onchange="aggiornaCampi(this)">
+      <option value="">— Non in catalogo, inserisco manualmente —</option>
+      {% for m in prossimi %}
+      <option value="{{ m.id }}" data-data="{{ m.data_inizio.strftime('%Y-%m-%d') }}" data-luogo="{{ m.citta }}, {{ m.regione }}">
+        {{ m.titolo }} · {{ m.data_inizio.strftime('%d/%m/%Y') }} · {{ m.citta }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <div class="dp-sep">oppure</div>
+
+    <!-- Opzione B: inserimento manuale -->
+    <div id="campi-manuali">
+      <label class="dp-label" style="margin-top:12px">Nome evento <span style="color:var(--warm)">(se non in catalogo)</span></label>
+      <input type="text" name="nome_evento" class="dp-input" placeholder="es. Mercato dell'artigianato locale" maxlength="200">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div>
+          <label class="dp-label">Data evento</label>
+          <input type="date" name="data_evento" id="data-ev" class="dp-input">
+        </div>
+        <div>
+          <label class="dp-label">Luogo</label>
+          <input type="text" name="luogo_evento" id="luogo-ev" class="dp-input" placeholder="es. Milano, Lombardia" maxlength="200">
+        </div>
+      </div>
+    </div>
+
+    <label class="dp-label" style="margin-top:20px">Messaggio breve ai follower <span style="color:var(--warm)">(opzionale, max 200 car.)</span></label>
+    <textarea name="messaggio_breve" class="dp-input" rows="3" maxlength="200" placeholder="es. Vi aspetto con le nuove creazioni natalizie! 🎄" style="resize:vertical"></textarea>
+
+    <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button type="submit" class="dp-btn">Dichiara partecipazione</button>
+      <a href="{{ url_for('artigiani.dashboard') }}" style="font-size:.82rem;color:var(--warm);line-height:42px;text-decoration:none">Annulla</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function aggiornaCampi(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const data = opt.dataset.data || '';
+  const luogo = opt.dataset.luogo || '';
+  document.getElementById('data-ev').value = data;
+  document.getElementById('luogo-ev').value = luogo;
+  document.getElementById('campi-manuali').style.opacity = sel.value ? '.45' : '1';
+}
+</script>
+{% endblock %}

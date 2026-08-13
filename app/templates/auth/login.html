@@ -11,6 +11,7 @@
   </p>
 
   <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {{ form.hidden_tag() }}
 
     <!-- Email -->

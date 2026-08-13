@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Pagamento completato – mercatini.blog{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto px-4 py-20 text-center">
+  <div class="text-6xl mb-6">🎉</div>
+  <h1 class="text-2xl font-bold text-gray-800 mb-3">Abbonamento attivato!</h1>
+  <p class="text-gray-500 mb-8">
+    Grazie per il tuo abbonamento a mercatini.blog.<br>
+    Riceverai una fattura via email. Puoi iniziare subito a pubblicare i tuoi mercatini.
+  </p>
+  <a href="{{ url_for('mercatini.nuovo') }}"
+     class="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold
+            px-6 py-3 rounded-xl transition-colors">
+    Pubblica un mercatino
+  </a>
+  <div class="mt-4">
+    <a href="{{ url_for('main.index') }}" class="text-sm text-gray-400 hover:text-gray-600">
+      Torna alla home
+    </a>
+  </div>
+</div>
+{% endblock %}

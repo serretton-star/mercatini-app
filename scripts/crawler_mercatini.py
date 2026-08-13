@@ -181,15 +181,38 @@ def parse_data(s):
 
 
 def is_duplicato(titolo, citta, data_inizio):
-    """Controlla se esiste già un mercatino con stesso titolo+città+data."""
-    if not data_inizio:
+    """
+    True se esiste gia' un mercatino simile nel DB.
+    Check 1: titolo esatto + citta + data_inizio (case-insensitive)
+    Check 2: stessa citta + stessa data + almeno 2 parole chiave in comune nel titolo
+    """
+    if not data_inizio or not citta:
         return False
-    existing = Mercatino.query.filter(
-        db.func.lower(Mercatino.titolo) == titolo.lower(),
-        db.func.lower(Mercatino.citta) == citta.lower(),
+    citta_n  = citta.lower().strip()
+    titolo_n = titolo.lower().strip()
+
+    # Check 1: match esatto
+    if Mercatino.query.filter(
+        db.func.lower(Mercatino.titolo) == titolo_n,
+        db.func.lower(Mercatino.citta)  == citta_n,
         Mercatino.data_inizio == data_inizio,
-    ).first()
-    return existing is not None
+    ).first():
+        return True
+
+    # Check 2: stessa citta + stessa data_inizio, titolo simile
+    candidati = Mercatino.query.filter(
+        db.func.lower(Mercatino.citta) == citta_n,
+        Mercatino.data_inizio == data_inizio,
+    ).all()
+    if candidati:
+        parole_nuove = {p for p in titolo_n.split() if len(p) >= 4}
+        for cand in candidati:
+            parole_old = {p for p in cand.titolo.lower().split() if len(p) >= 4}
+            if len(parole_nuove & parole_old) >= 2:
+                log.info(f'Duplicato fuzzy: "{titolo}" ~ "{cand.titolo}" a {citta} ({data_inizio})')
+                return True
+
+    return False
 
 
 def inserisci_bozza(ev, fonte_url, cat_artigianato):
@@ -269,11 +292,136 @@ def run():
                 log.info(f'  Inserite {inseriti_url} bozze da {url}')
             totale_inseriti += inseriti_url
 
+        # Promo-D.com
+        crawla_promod(cat_artigianato, log)
         log.info(
             f'CRAWLER COMPLETATO — trovati {totale_trovati}, '
             f'inserite {totale_inseriti} nuove bozze'
         )
 
+
+
+# ──────────────────────────────────────────────────────────
+# PROMO-D.COM – scraper dedicato (struttura server-rendered)
+# ──────────────────────────────────────────────────────────
+MESI_IT = {
+    'gennaio':1,'febbraio':2,'marzo':3,'aprile':4,'maggio':5,'giugno':6,
+    'luglio':7,'agosto':8,'settembre':9,'ottobre':10,'novembre':11,'dicembre':12,
+    'gen':1,'feb':2,'mar':3,'apr':4,'mag':5,'giu':6,
+    'lug':7,'ago':8,'set':9,'ott':10,'nov':11,'dic':12,
+}
+
+def _parse_data_it(s):
+    """Converte '31 Maggio 2026' / '09 Set 2026' in date."""
+    from datetime import date
+    parts = s.strip().split()
+    if len(parts) < 3:
+        return None
+    try:
+        g = int(parts[0])
+        m = MESI_IT.get(parts[1].lower())
+        a = int(parts[2])
+        return date(a, m, g) if m else None
+    except Exception:
+        return None
+
+
+def _fetch_promod_slugs():
+    """Raccoglie tutti gli slug /evento/ dalle pagine listing di promo-d.com."""
+    import re
+    listing_urls = [
+        'https://www.promo-d.com/mercatini/',
+        'https://www.promo-d.com/eventi-in-programma/',
+        'https://www.promo-d.com/fiere/',
+        'https://www.promo-d.com/antiquariato/',
+    ]
+    seen = set()
+    for url in listing_urls:
+        try:
+            # Usa requests direttamente per cercare href nel HTML grezzo
+            resp = requests.get(url, headers=HEADERS, timeout=15)
+            found = re.findall('/evento/([\w-]+)/', resp.text)
+            for slug in found:
+                seen.add(slug)
+        except Exception as e:
+            pass  # log silenzioso
+    return list(seen)
+
+
+def _parse_promod_evento(url):
+    """Estrae dati strutturati da una singola pagina evento promo-d.com."""
+    from bs4 import BeautifulSoup
+    import re
+    try:
+        html = requests.get(url, headers=HEADERS, timeout=15).text
+    except Exception as e:
+        log.warning(f"promo-d evento {url}: {e}")
+        return None
+    soup = BeautifulSoup(html, 'html.parser')
+    # Titolo
+    h1 = soup.find('h1')
+    titolo = h1.get_text(strip=True) if h1 else None
+    if not titolo:
+        return None
+    # Testo completo per estrarre campi
+    testo = soup.get_text(separator=' ')
+    def find_field(label):
+        m = re.search(label + r'\s+([\w\s]+?(?:\d{4}))', testo, re.IGNORECASE)
+        return m.group(1).strip() if m else None
+    data_ini_str = find_field('Data inizio')
+    data_fin_str = find_field('Data fine')
+    data_ini = _parse_data_it(data_ini_str) if data_ini_str else None
+    data_fin = _parse_data_it(data_fin_str) if data_fin_str else data_ini
+    # Località
+    loc_m = re.search(r'Localit[àa]\s+([^\n]{3,60})', testo)
+    citta = loc_m.group(1).strip() if loc_m else None
+    # Orari
+    or_m = re.search(r'(dalle?\s+\d+[:\.]\d+.{0,50})', testo, re.IGNORECASE)
+    orario = or_m.group(1).strip()[:100] if or_m else None
+    # Descrizione (primo blocco di testo utile)
+    desc_m = re.search(r'(?:Localit[àa]\s+[^\n]+\n)([\s\S]{50,600}?)(?:Sei un espositore|Per ulteriori|Documenti)', testo)
+    descrizione = re.sub(r'\s+', ' ', desc_m.group(1)).strip()[:800] if desc_m else titolo
+    return {
+        'titolo': titolo,
+        'citta': citta,
+        'data_inizio': data_ini,
+        'data_fine': data_fin,
+        'orario': orario,
+        'descrizione': descrizione,
+        'sito_web': url,
+        'provincia': None,
+        'regione': None,
+        'indirizzo': None,
+    }
+
+
+def crawla_promod(cat_artigianato, logger=None):
+    """Scraper dedicato per promo-d.com"""
+    import logging as _logging
+    if logger is None:
+        logger = _logging.getLogger(__name__)
+    from datetime import date
+    oggi = date.today()
+    logger.info("=== promo-d.com: inizio ===")
+    slugs = _fetch_promod_slugs()
+    logger.info(f"promo-d: {len(slugs)} eventi trovati")
+    inseriti = 0
+    for slug in slugs:
+        url = f"https://www.promo-d.com/evento/{slug}/"
+        ev = _parse_promod_evento(url)
+        if not ev:
+            continue
+        # Scarta solo se sia data_inizio sia data_fine sono nel passato
+        data_fine_ev = ev.get('data_fine') or ev['data_inizio']
+        if not ev['data_inizio'] or data_fine_ev < oggi:
+            continue
+        if is_duplicato(ev['titolo'], ev['citta'] or '', ev['data_inizio']):
+            logger.info(f"  dup: {ev['titolo']}")
+            continue
+        inserisci_bozza(ev, url, cat_artigianato)
+        inseriti += 1
+        logger.info(f"  + {ev['titolo']} ({ev['citta']})")
+    logger.info(f"promo-d.com: {inseriti} nuovi inseriti")
 
 if __name__ == '__main__':
     run()

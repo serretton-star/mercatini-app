@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Carica foto — Dashboard Artigiano{% endblock %}
+
+{% block content %}
+<div style="max-width:580px;margin:0 auto">
+  <a href="{{ url_for('artigiani.dashboard') }}"
+     style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--warm);text-decoration:none;
+            display:inline-flex;align-items:center;gap:6px;margin-bottom:28px">
+    ← Dashboard
+  </a>
+
+  <div class="section-label" style="margin-bottom:10px">Galleria</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;
+             letter-spacing:-.03em;margin-bottom:6px">
+    Carica le tue creazioni
+  </h1>
+  <p style="color:var(--warm);font-size:.85rem;margin-bottom:28px">
+    JPG, PNG o WEBP · max 8 MB per foto · le immagini vengono ottimizzate
+    automaticamente
+  </p>
+
+  <form method="POST" enctype="multipart/form-data" id="upload-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- Drop zone -->
+    <div id="drop-zone"
+         style="border:2px dashed var(--sand);border-radius:12px;
+                padding:48px 24px;text-align:center;cursor:pointer;
+                transition:border-color .2s,background .2s;margin-bottom:20px"
+         onclick="document.getElementById('file-input').click()"
+         ondragover="ev=>{ev.preventDefault();this.style.borderColor='var(--terra)';
+                          this.style.background='#fdf5f2'}"
+         ondragleave="this.style.borderColor='var(--sand)';this.style.background=''"
+         ondrop="handleDrop(event)">
+      <div style="font-size:2rem;margin-bottom:8px;color:var(--sand)">✦</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:.92rem;
+                  color:var(--warm)">
+        Trascina le foto qui oppure
+        <span style="color:var(--terra);font-weight:600">sfoglia</span>
+      </div>
+      <input type="file" id="file-input" name="foto" multiple accept="image/*"
+             style="display:none" onchange="showPreviews(this.files)">
+    </div>
+
+    <!-- Anteprime -->
+    <div id="previews" style="display:flex;flex-direction:column;gap:16px;
+                               margin-bottom:20px"></div>
+
+    <button type="submit" id="submit-btn"
+            style="display:none;width:100%;background:var(--terra);color:#fff;
+                   border:none;border-radius:8px;padding:12px;
+                   font-family:'DM Sans',sans-serif;font-size:.92rem;
+                   font-weight:600;cursor:pointer;transition:background .2s"
+            onmouseenter="this.style.background='var(--terra2)'"
+            onmouseleave="this.style.background='var(--terra)'">
+      Carica foto selezionate
+    </button>
+  </form>
+
+  <!-- Quota -->
+  <div style="margin-top:24px;padding:14px 18px;background:var(--paper2);
+              border-radius:10px;font-size:.8rem;color:var(--warm)">
+    Spazio disponibile:
+    <strong style="color:var(--ink)">
+      {{ hobbista.storage_max_mb - hobbista.storage_usato_mb|int }} MB
+    </strong>
+    su {{ hobbista.storage_max_mb }} MB
+    (piano
+    <strong>{{ hobbista.piano.nome if hobbista.piano else 'Base' }}</strong>).
+    <a href="{{ url_for('artigiani.abbonamento') }}"
+       style="color:var(--terra);margin-left:4px">Amplia lo spazio</a>
+  </div>
+</div>
+
+<script>
+function showPreviews(files) {
+  const container = document.getElementById('previews');
+  container.innerHTML = '';
+  if (!files || !files.length) {
+    document.getElementById('submit-btn').style.display = 'none';
+    return;
+  }
+  Array.from(files).forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:14px;align-items:flex-start;' +
+        'background:#fff;border:1px solid var(--sand);border-radius:10px;padding:14px';
+      row.innerHTML = `
+        <img src="${e.target.result}" alt=""
+             style="width:80px;height:80px;object-fit:cover;border-radius:8px;
+                    flex-shrink:0">
+        <div style="flex:1">
+          <div style="font-size:.82rem;color:var(--warm);margin-bottom:6px;
+                      font-family:'DM Mono',monospace;font-size:.62rem;
+                      letter-spacing:.06em;text-transform:uppercase">
+            ${file.name} — ${(file.size/1024/1024).toFixed(1)} MB
+          </div>
+          <input type="text" name="didascalia"
+                 placeholder="Didascalia opzionale (max 150 caratteri)"
+                 maxlength="150"
+                 style="width:100%;border:1px solid var(--sand);border-radius:7px;
+                        padding:8px 12px;font-family:'DM Sans',sans-serif;
+                        font-size:.85rem;background:#fff;color:var(--ink)">
+        </div>`;
+      container.appendChild(row);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('submit-btn').style.display = 'block';
+}
+
+function handleDrop(ev) {
+  ev.preventDefault();
+  const zone = document.getElementById('drop-zone');
+  zone.style.borderColor = 'var(--sand)';
+  zone.style.background = '';
+  const dt    = ev.dataTransfer;
+  const input = document.getElementById('file-input');
+  const files = dt.files;
+
+  // Assign files to input (Chrome/FF support)
+  try {
+    const transfer = new DataTransfer();
+    Array.from(files).forEach(f => transfer.items.add(f));
+    input.files = transfer.files;
+  } catch(e) {}
+
+  showPreviews(files);
+}
+</script>
+{% endblock %}

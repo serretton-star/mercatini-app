@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Crea il tuo profilo artigiano — mercatini.blog{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:0 auto">
+  <a href="{{ url_for('artigiani.elenco') }}"
+     style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--warm);text-decoration:none;
+            display:inline-flex;align-items:center;gap:6px;margin-bottom:28px">
+    ← Artigiani
+  </a>
+
+  <div class="section-label" style="margin-bottom:10px">Nuovo profilo</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:1.9rem;font-weight:900;
+             letter-spacing:-.03em;margin-bottom:6px">
+    Mostra le tue creazioni
+  </h1>
+  <p style="color:var(--warm);font-size:.88rem;margin-bottom:32px">
+    Crea il tuo spazio gratuito su mercatini.blog. Nessuna partita IVA richiesta.
+  </p>
+
+  <form method="POST" style="display:flex;flex-direction:column;gap:16px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.65rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">
+        Nome visualizzato *
+      </label>
+      <input type="text" name="nome_visualizzato" required maxlength="100"
+             value="{{ form.get('nome_visualizzato','') }}"
+             placeholder="es. Anna — Ceramiche a mano"
+             style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                    padding:10px 14px;font-family:'DM Sans',sans-serif;
+                    font-size:.9rem;background:#fff;color:var(--ink)">
+    </div>
+
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.65rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">
+        Email *
+      </label>
+      <input type="email" name="email" required
+             value="{{ form.get('email','') }}"
+             placeholder="la-tua@email.it"
+             style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                    padding:10px 14px;font-family:'DM Sans',sans-serif;
+                    font-size:.9rem;background:#fff;color:var(--ink)">
+    </div>
+
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.65rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">
+        Password * (min 8 caratteri)
+      </label>
+      <input type="password" name="password" required minlength="8"
+             placeholder="Scegli una password sicura"
+             style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                    padding:10px 14px;font-family:'DM Sans',sans-serif;
+                    font-size:.9rem;background:#fff;color:var(--ink)">
+    </div>
+
+    <div style="border-top:1px solid var(--sand);padding-top:16px">
+      <p style="font-family:'DM Mono',monospace;font-size:.62rem;
+                letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                margin-bottom:12px">
+        Contatti (opzionali, aggiungibili dopo)
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:.8rem;color:var(--warm);display:block;margin-bottom:4px">
+            Instagram handle
+          </label>
+          <input type="text" name="instagram_handle"
+                 value="{{ form.get('instagram_handle','') }}"
+                 placeholder="@tuonome"
+                 style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                        padding:9px 14px;font-family:'DM Sans',sans-serif;
+                        font-size:.88rem;background:#fff;color:var(--ink)">
+        </div>
+        <div>
+          <label style="font-size:.8rem;color:var(--warm);display:block;margin-bottom:4px">
+            Numero WhatsApp
+          </label>
+          <input type="text" name="whatsapp_number"
+                 value="{{ form.get('whatsapp_number','') }}"
+                 placeholder="+39 340 000 0000"
+                 style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                        padding:9px 14px;font-family:'DM Sans',sans-serif;
+                        font-size:.88rem;background:#fff;color:var(--ink)">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <input type="checkbox" name="termini_accettati" id="termini" required
+             style="margin-top:3px;accent-color:var(--terra);width:16px;height:16px">
+      <label for="termini" style="font-size:.82rem;color:var(--ink);line-height:1.5">
+        Ho letto e accetto i
+        <a href="{{ url_for('artigiani.termini') }}" target="_blank"
+           style="color:var(--terra)">Termini di Servizio</a>
+        per gli artigiani hobbisti. *
+      </label>
+    </div>
+
+    <button type="submit"
+            style="background:var(--terra);color:#fff;border:none;border-radius:8px;
+                   padding:12px;font-family:'DM Sans',sans-serif;font-size:.92rem;
+                   font-weight:600;cursor:pointer;transition:background .2s"
+            onmouseenter="this.style.background='var(--terra2)'"
+            onmouseleave="this.style.background='var(--terra)'">
+      Crea il mio profilo
+    </button>
+
+    <p style="text-align:center;font-size:.82rem;color:var(--warm)">
+      Hai già un profilo?
+      <a href="{{ url_for('artigiani_auth.login') }}" style="color:var(--terra)">
+        Accedi
+      </a>
+    </p>
+  </form>
+</div>
+{% endblock %}

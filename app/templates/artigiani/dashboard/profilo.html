@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Modifica profilo — {{ hobbista.nome_visualizzato }}{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;margin:0 auto">
+  <a href="{{ url_for('artigiani.dashboard') }}"
+     style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--warm);text-decoration:none;
+            display:inline-flex;align-items:center;gap:6px;margin-bottom:28px">
+    ← Dashboard
+  </a>
+
+  <div class="section-label" style="margin-bottom:10px">Account</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;
+             letter-spacing:-.03em;margin-bottom:28px">
+    Modifica profilo
+  </h1>
+
+  <form method="POST" style="display:flex;flex-direction:column;gap:18px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {% macro field(label, name, value, placeholder='', maxlength='', hint='') %}
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.63rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">{{ label }}</label>
+      <input type="text" name="{{ name }}" value="{{ value|e }}"
+             placeholder="{{ placeholder }}"
+             {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+             style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                    padding:10px 14px;font-family:'DM Sans',sans-serif;
+                    font-size:.9rem;background:#fff;color:var(--ink)">
+      {% if hint %}
+      <div style="font-size:.75rem;color:var(--warm);margin-top:4px">{{ hint }}</div>
+      {% endif %}
+    </div>
+    {% endmacro %}
+
+    {{ field('Nome visualizzato *', 'nome_visualizzato',
+             hobbista.nome_visualizzato, 'es. Anna — Ceramiche a mano', '100') }}
+
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.63rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">
+        Breve descrizione (max 200 caratteri)
+      </label>
+      <textarea name="bio_breve" maxlength="200" rows="3"
+                placeholder="Cosa crei? Con quali materiali lavori? Cosa ti ispira?"
+                style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                       padding:10px 14px;font-family:'DM Sans',sans-serif;
+                       font-size:.9rem;background:#fff;color:var(--ink);resize:vertical"
+      >{{ hobbista.bio_breve or '' }}</textarea>
+      <div style="font-size:.73rem;color:var(--warm);margin-top:4px">
+        <span id="bio-count">{{ (hobbista.bio_breve or '')|length }}</span>/200
+      </div>
+    </div>
+
+    {{ field('Città / Comune', 'comune',
+             hobbista.comune or '', 'es. Milano', '100') }}
+
+    <div style="border-top:1px solid var(--sand);padding-top:18px">
+      <div style="font-family:'DM Mono',monospace;font-size:.62rem;
+                  letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                  margin-bottom:14px">Contatti pubblici</div>
+
+      {{ field('Instagram handle', 'instagram_handle',
+               hobbista.instagram_handle or '', '@tuonome', '100',
+               'Visibile sul profilo come link "Seguimi su Instagram"') }}
+
+      {{ field('Numero WhatsApp', 'whatsapp_number',
+               hobbista.whatsapp_number or '', '+39 340 000 0000', '30',
+               'Visibile come "Scrivimi su WhatsApp" — inserisci il prefisso internazionale') }}
+
+      {{ field('Telegram handle', 'telegram_handle',
+               hobbista.telegram_handle or '', '@tuonome', '100',
+               'Visibile come "Contattami su Telegram"') }}
+    </div>
+
+    <button type="submit"
+            style="background:var(--terra);color:#fff;border:none;border-radius:8px;
+                   padding:12px;font-family:'DM Sans',sans-serif;font-size:.92rem;
+                   font-weight:600;cursor:pointer;transition:background .2s"
+            onmouseenter="this.style.background='var(--terra2)'"
+            onmouseleave="this.style.background='var(--terra)'">
+      Salva modifiche
+    </button>
+  </form>
+</div>
+
+<script>
+const bio = document.querySelector('textarea[name="bio_breve"]');
+const cnt = document.getElementById('bio-count');
+if (bio && cnt) {
+  bio.addEventListener('input', () => { cnt.textContent = bio.value.length; });
+}
+</script>
+{% endblock %}

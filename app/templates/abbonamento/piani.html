@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Abbonamento Premium – mercatini.blog{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-12">
+
+  <div class="text-center mb-10">
+    <h1 class="text-3xl font-bold text-gray-800 mb-3">Abbonamento Premium</h1>
+    <p class="text-gray-500 text-lg">
+      Scegli il periodo che preferisci. Più lungo scegli, più risparmi.<br>
+      <strong class="text-amber-700">Nessun vincolo</strong>: puoi sempre cambiare piano.
+    </p>
+
+    {% if current_user.is_premium %}
+    <div class="mt-6 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700
+                rounded-full px-6 py-2 text-sm font-medium">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+      </svg>
+      Abbonamento attivo fino al {{ current_user.subscription_end.strftime('%d/%m/%Y') }}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    {% for piano in piani %}
+    <div class="relative flex flex-col bg-white rounded-2xl shadow-sm border
+                {{ 'border-amber-500 ring-2 ring-amber-400' if piano.badge else 'border-gray-200' }}
+                hover:shadow-md transition-shadow">
+
+      {% if piano.badge %}
+      <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+        <span class="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow uppercase tracking-wide">
+          {{ piano.badge }}
+        </span>
+      </div>
+      {% endif %}
+
+      <div class="p-6 flex flex-col flex-1">
+        <h2 class="text-base font-bold text-gray-700 mb-1">{{ piano.nome }}</h2>
+        <p class="text-4xl font-extrabold text-gray-900 mb-0.5">{{ piano.prezzo }}</p>
+        <p class="text-xs text-gray-400 mb-1">{{ piano.sottotitolo }}</p>
+        {% if piano.cpm %}
+        <p class="text-sm font-medium text-amber-600 mb-3">{{ piano.cpm }}</p>
+        {% elif piano.descrizione %}
+        <p class="text-sm font-semibold text-green-600 mb-3">{{ piano.descrizione }}</p>
+        {% else %}
+        <div class="mb-3"></div>
+        {% endif %}
+
+        <ul class="text-sm text-gray-600 space-y-1.5 mb-6 flex-1">
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            {{ piano.chat_al_mese }} chat AI al mese
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Filtri completi
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Notifiche via email
+          </li>
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            5 eventi al mese
+          </li>
+        </ul>
+
+        <form method="POST" action="{{ url_for('abbonamento.checkout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="piano" value="{{ piano.chiave }}">
+          <button type="submit"
+            class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-colors
+                   {{ 'bg-amber-500 hover:bg-amber-600 text-white shadow' if piano.badge else 'bg-gray-100 hover:bg-amber-100 text-gray-700' }}">
+            Scegli questo piano
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-10 text-center text-xs text-gray-400 space-y-1">
+    <p>Pagamento sicuro con Stripe &middot; Carta di credito/debito accettata</p>
+    <p>Nessun rinnovo automatico &middot; Ricevi fattura via email</p>
+  </div>
+
+</div>
+{% endblock %}

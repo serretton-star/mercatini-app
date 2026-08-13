@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Artigiani seguiti — Il mio account{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-secondary">🎨 Artigiani che segui</h1>
+      <p class="text-sm text-gray-400 mt-1">Ricevi aggiornamenti automatici via email quando caricano nuove creazioni o partecipano a eventi.</p>
+    </div>
+    <a href="{{ url_for('account.profilo') }}" class="text-xs text-gray-400 hover:text-gray-600">← Account</a>
+  </div>
+
+  {% if follows %}
+  <div class="space-y-3">
+    {% for follow in follows %}
+    <div class="bg-white rounded-xl shadow-sm p-4 flex items-center gap-4" id="follow-row-{{ follow.hobbista.id }}">
+      {% if follow.hobbista.foto_di_copertina %}
+      <img src="{{ follow.hobbista.foto_di_copertina.thumb_url }}"
+           alt="{{ follow.hobbista.nome_visualizzato }}"
+           class="w-16 h-16 rounded-xl object-cover flex-shrink-0">
+      {% else %}
+      <div class="w-16 h-16 rounded-xl bg-warm flex items-center justify-center text-2xl flex-shrink-0">✦</div>
+      {% endif %}
+      <div class="flex-1 min-w-0">
+        <a href="{{ url_for('artigiani.profilo', hobbista_id=follow.hobbista.id) }}"
+           class="font-semibold text-secondary hover:text-primary truncate block">{{ follow.hobbista.nome_visualizzato }}</a>
+        {% if follow.hobbista.comune %}
+        <p class="text-xs text-gray-400">📍 {{ follow.hobbista.comune }}</p>
+        {% endif %}
+        <p class="text-xs text-gray-400 mt-0.5">Segui dal {{ follow.data_inizio_follow.strftime('%d/%m/%Y') }}</p>
+      </div>
+      <button onclick="smetti({{ follow.hobbista.id }})"
+              id="btn-smetti-{{ follow.hobbista.id }}"
+              class="text-xs text-red-400 hover:text-red-600 border border-red-200 rounded-lg px-3 py-1.5 transition-colors flex-shrink-0">
+        Smetti di seguire
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white rounded-xl shadow-sm p-8 text-center text-gray-400">
+    <p class="text-3xl mb-3">🎨</p>
+    <p class="font-medium text-secondary mb-1">Non segui ancora nessun artigiano</p>
+    <p class="text-sm mb-4">Visita il profilo di un artigiano e clicca "Segui" per ricevere i suoi aggiornamenti.</p>
+    <a href="{{ url_for('artigiani.elenco') }}" class="text-sm font-medium text-primary hover:underline">Scopri gli artigiani →</a>
+  </div>
+  {% endif %}
+
+  <!-- Preferenze notifiche -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold text-secondary mb-3">🔔 Preferenze notifiche artigiani</h2>
+    <form method="POST" action="{{ url_for('account.notifiche_artigiani') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="space-y-3">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" name="notifiche_eventi" id="notifiche_eventi"
+                 {% if current_user.notifiche_eventi_hobbisti %}checked{% endif %}
+                 class="mt-0.5 accent-primary">
+          <div>
+            <span class="text-sm font-medium text-secondary">Notifiche eventi</span>
+            <p class="text-xs text-gray-400">Email immediata quando un artigiano che segui annuncia la partecipazione a un mercatino.</p>
+          </div>
+        </label>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" name="notifiche_digest" id="notifiche_digest"
+                 {% if current_user.notifiche_digest_foto_hobbisti %}checked{% endif %}
+                 class="mt-0.5 accent-primary">
+          <div>
+            <span class="text-sm font-medium text-secondary">Digest foto giornaliero</span>
+            <p class="text-xs text-gray-400">Un'unica email giornaliera con le nuove foto caricate dagli artigiani che segui (solo se ci sono novità).</p>
+          </div>
+        </label>
+      </div>
+      <button type="submit" class="mt-4 bg-secondary text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-secondary-light transition-colors">
+        Salva preferenze
+      </button>
+    </form>
+  </section>
+</div>
+
+<script>
+const CSRF = document.querySelector('meta[name=csrf-token]')?.content || '';
+async function smetti(hobbistaId) {
+  const btn = document.getElementById('btn-smetti-' + hobbistaId);
+  btn.disabled = true; btn.textContent = '…';
+  const fd = new FormData();
+  fd.append('csrf_token', CSRF);
+  const r = await fetch(`/artigiani/${hobbistaId}/smetti-di-seguire`, {method:'POST', body:fd});
+  const j = await r.json();
+  if (j.seguendo === false) {
+    document.getElementById('follow-row-' + hobbistaId).style.opacity = '.35';
+    btn.textContent = 'Non segui più';
+    btn.style.pointerEvents = 'none';
+  }
+}
+</script>
+{% endblock %}

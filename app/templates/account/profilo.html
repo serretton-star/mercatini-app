@@ -217,6 +217,25 @@
     </form>
   </section>
 
+
+  <!-- ARTIGIANI SEGUITI -->
+  <section class="bg-white rounded-xl shadow-sm p-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-secondary">🎨 Artigiani seguiti</h2>
+        <p class="text-xs text-gray-400 mt-1">Segui gli artigiani e ricevi aggiornamenti via email.</p>
+      </div>
+      <a href="{{ url_for('account.seguiti') }}"
+         class="text-sm font-medium text-primary hover:underline">
+        Gestisci →
+      </a>
+    </div>
+    <p class="text-sm text-gray-500 mt-3">
+      Vai nella sezione <a href="{{ url_for('account.seguiti') }}" class="text-primary underline">Artigiani seguiti</a>
+      per vedere chi segui e gestire le notifiche.
+    </p>
+  </section>
+
   <!-- MODIFICA PROFILO -->
   <section id="modifica-profilo" class="bg-white rounded-xl shadow-sm p-5">
     <h2 class="font-semibold text-secondary mb-4">Modifica profilo</h2>

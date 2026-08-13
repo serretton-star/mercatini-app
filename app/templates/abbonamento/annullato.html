@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Pagamento annullato – mercatini.blog{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto px-4 py-20 text-center">
+  <div class="text-6xl mb-6">😕</div>
+  <h1 class="text-2xl font-bold text-gray-800 mb-3">Pagamento annullato</h1>
+  <p class="text-gray-500 mb-8">
+    Hai annullato il pagamento. Puoi scegliere un piano in qualsiasi momento.
+  </p>
+  <a href="{{ url_for('abbonamento.piani') }}"
+     class="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold
+            px-6 py-3 rounded-xl transition-colors">
+    Torna ai piani
+  </a>
+</div>
+{% endblock %}

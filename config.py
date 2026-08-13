@@ -26,12 +26,20 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@mercatiniapp.it')
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() == 'true'
     MAIL_SUPPRESS_SEND = os.environ.get('MAIL_USERNAME') is None  # True se SMTP non configurato
     # Anthropic Chat AI
     ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
     ANTHROPIC_MODEL   = os.environ.get('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001')
     # OpenWeatherMap
     OPENWEATHER_API_KEY = os.environ.get('OPENWEATHER_API_KEY', '')
+    # Stripe
+    STRIPE_SECRET_KEY      = os.environ.get('STRIPE_SECRET_KEY', '')
+    STRIPE_WEBHOOK_SECRET  = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+    STRIPE_PRICE_1M  = os.environ.get('STRIPE_PRICE_1M', '')
+    STRIPE_PRICE_3M  = os.environ.get('STRIPE_PRICE_3M', '')
+    STRIPE_PRICE_6M  = os.environ.get('STRIPE_PRICE_6M', '')
+    STRIPE_PRICE_12M = os.environ.get('STRIPE_PRICE_12M', '')
 
 
 class DevelopmentConfig(Config):

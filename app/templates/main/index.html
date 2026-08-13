@@ -1,184 +1,358 @@
 {% extends 'base.html' %}
-{% block title %}Mercatini App — Trova il tuo mercatino artigianale{% endblock %}
+{% block title %}mercatini.blog — Trova il tuo mercatino artigianale{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── HOME HERO ── */
+.home-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--warm); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.home-eyebrow-line {
+  display: inline-block; width: 24px; height: 1px; background: var(--terra);
+}
+.home-h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 900; font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: .97; letter-spacing: -.04em;
+  color: var(--ink); margin-bottom: 14px;
+}
+.home-h1 em { color: var(--terra); font-style: italic; }
+.home-stat {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem; letter-spacing: .12em;
+  color: var(--warm); margin-bottom: 28px;
+}
+.home-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+.btn-home-primary {
+  font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 600;
+  color: #fff; background: var(--terra); border: none; border-radius: 6px;
+  padding: 12px 22px; text-decoration: none; transition: background .2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-home-primary:hover { background: var(--terra2); }
+.btn-home-ghost {
+  font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 500;
+  color: var(--ink); background: none;
+  border: 1px solid var(--sand); border-radius: 6px;
+  padding: 12px 20px; text-decoration: none; transition: border-color .2s, color .2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-home-ghost:hover { border-color: var(--terra); color: var(--terra); }
+.home-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.home-pill {
+  font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .08em;
+  color: var(--warm); background: none;
+  border: 1px solid var(--sand); border-radius: 100px;
+  padding: 5px 12px;
+}
+
+/* ── SECTION LABELS ── */
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--warm);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+}
+.section-label .dot-live {
+  width: 6px; height: 6px; border-radius: 50%; background: #10B981;
+  animation: pulse-g 2s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes pulse-g { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
+
+/* ── EVENT CARDS ── */
+.event-card {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border: 1px solid var(--paper2);
+  border-radius: 12px; padding: 14px 16px;
+  text-decoration: none; color: inherit;
+  transition: border-color .2s, box-shadow .2s;
+}
+.event-card:hover {
+  border-color: var(--sand);
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+.event-datebox {
+  width: 42px; height: 42px; flex-shrink: 0;
+  background: var(--ink2); border-radius: 9px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.event-datebox .day {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 1.05rem; color: #fff; line-height: 1;
+}
+.event-datebox .mon {
+  font-family: 'DM Mono', monospace; font-size: .42rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(255,255,255,.45); margin-top: 1px;
+}
+.event-card-body { flex: 1; min-width: 0; }
+.event-card-title {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: .9rem; color: var(--ink); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.event-card-loc {
+  font-size: .7rem; color: var(--warm);
+  display: flex; align-items: center; gap: 4px;
+}
+.event-card-loc svg { flex-shrink: 0; }
+.event-badge {
+  font-family: 'DM Mono', monospace; font-size: .52rem;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 100px; flex-shrink: 0;
+}
+.event-badge.in-corso  { background: #D1FAE5; color: #065F46; }
+.event-badge.prossimo  { background: var(--paper2); color: var(--warm); }
+.event-badge.gratuito  { background: #D1FAE5; color: #065F46; }
+.event-badge.price     { color: var(--warm); }
+
+/* ── CTA ── */
+.home-cta {
+  background: var(--ink2); border-radius: 14px;
+  padding: 28px 24px; text-align: center;
+}
+.home-cta h3 {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1.2rem; color: #fff; margin-bottom: 8px;
+}
+.home-cta p {
+  font-size: .8rem; color: rgba(255,255,255,.38);
+  line-height: 1.7; margin-bottom: 20px; max-width: 280px; margin-inline: auto;
+}
+
+/* ── ARTIGIANI CARDS ── */
+.art-strip {
+  display: flex; gap: 12px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.art-strip::-webkit-scrollbar { display: none; }
+.art-mini-card {
+  flex: 0 0 140px; scroll-snap-align: start;
+  background: #fff; border: 1px solid var(--paper2);
+  border-radius: 12px; overflow: hidden;
+  text-decoration: none; color: inherit;
+  transition: border-color .2s, box-shadow .2s;
+  display: flex; flex-direction: column;
+}
+.art-mini-card:hover {
+  border-color: var(--sand);
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+}
+.art-mini-photo {
+  width: 100%; height: 110px;
+  object-fit: cover; background: var(--paper2);
+  display: block;
+}
+.art-mini-photo-placeholder {
+  width: 100%; height: 110px;
+  background: var(--paper2);
+  display: flex; align-items: center; justify-content: center;
+}
+.art-mini-body {
+  padding: 9px 10px;
+}
+.art-mini-nome {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: .78rem; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.art-mini-spec {
+  font-size: .62rem; color: var(--warm);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+<div style="display:flex;flex-direction:column;gap:36px">
 
   <!-- HERO -->
-  <div class="text-center py-8">
-    <p class="text-5xl mb-3">🏪</p>
-    <h1 class="text-2xl font-bold text-secondary leading-snug">
-      Mercatini artigianali<br>in tutta Italia
+  <div style="padding-top:12px">
+    <div class="home-eyebrow">
+      <span class="home-eyebrow-line"></span>
+      Il blog dei mercatini italiani
+    </div>
+    <h1 class="home-h1">
+      Mercatini<br>artigianali<br><em>in tutta Italia</em>
     </h1>
-    <p class="text-gray-500 text-sm mt-2">
+    <p class="home-stat">
       {% if totale > 0 %}
-        {{ totale }} mercatin{{ 'o' if totale == 1 else 'i' }} pubblicat{{ 'o' if totale == 1 else 'i' }}
+        {{ totale }} mercatin{{ 'o' if totale == 1 else 'i' }} &nbsp;&middot;&nbsp; {{ utenti }} iscritt{{ 'o' if utenti == 1 else 'i' }}
       {% else %}
         Scopri, condividi e partecipa
       {% endif %}
     </p>
-    <div class="flex flex-wrap justify-center gap-3 mt-5">
-      <a href="{{ url_for('mercatini.index') }}"
-         class="bg-primary text-white font-medium px-5 py-2.5 rounded-lg
-                hover:bg-primary-dark transition-colors text-sm">
+    <div class="home-actions">
+      <a href="{{ url_for('mercatini.index') }}" class="btn-home-primary">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         Esplora tutti
       </a>
       {% if current_user.is_authenticated %}
-      <a href="{{ url_for('chat.index') }}"
-         class="border border-primary text-primary font-medium px-5 py-2.5
-                rounded-lg hover:bg-primary/5 transition-colors text-sm flex items-center gap-1.5">
-        🤖 Assistente AI
-      </a>
-      <a href="{{ url_for('mercatini.nuovo') }}"
-         class="border border-gray-200 text-secondary font-medium px-5 py-2.5
-                rounded-lg hover:bg-gray-50 transition-colors text-sm">
-        + Aggiungi
-      </a>
+      <a href="{{ url_for('chat.index') }}" class="btn-home-ghost">Assistente AI</a>
+      <a href="{{ url_for('mercatini.nuovo') }}" class="btn-home-ghost">+ Aggiungi</a>
       {% else %}
-      <a href="{{ url_for('chat.index') }}"
-         class="border border-primary text-primary font-medium px-5 py-2.5
-                rounded-lg hover:bg-primary/5 transition-colors text-sm flex items-center gap-1.5">
-        🤖 Assistente AI
-      </a>
-      <a href="{{ url_for('auth.register') }}"
-         class="border border-gray-200 text-secondary font-medium px-5 py-2.5
-                rounded-lg hover:bg-gray-50 transition-colors text-sm">
-        Registrati
-      </a>
+      <a href="{{ url_for('chat.index') }}" class="btn-home-ghost">Assistente AI</a>
+      <a href="{{ url_for('auth.register') }}" class="btn-home-ghost">Registrati gratis</a>
       {% endif %}
     </div>
-
-    <!-- Bottoni secondari: Scarica app + Condividi -->
-    <div class="flex justify-center gap-3 mt-3">
-      <button id="btn-installa" onclick="installaApp()"
-        class="flex items-center gap-1.5 text-xs border border-gray-300 text-gray-600
-               px-4 py-2 rounded-full hover:border-primary hover:text-primary transition-colors">
-        &#11015; Scarica app
-      </button>
-      <button onclick="condividi()"
-        class="flex items-center gap-1.5 text-xs border border-gray-300 text-gray-600
-               px-4 py-2 rounded-full hover:border-primary hover:text-primary transition-colors">
-        &#8679; Condividi
-      </button>
+    <div class="home-pills">
+      <span class="home-pill">{{ totale }}+ mercatini</span>
+      <span class="home-pill">20 regioni</span>
+      <span class="home-pill">Gratis</span>
     </div>
-
-    <!-- Toast notifica -->
-    <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50
-         bg-secondary text-white text-xs px-5 py-2.5 rounded-full shadow-lg"></div>
   </div>
-
-  {% if current_user.is_authenticated %}
 
   <!-- IN CORSO -->
   {% if in_corso %}
   <section>
-    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
-      🟢 In corso
-    </h2>
-    <div class="space-y-3">
+    <div class="section-label">
+      <span class="dot-live"></span>
+      In corso
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
       {% for m in in_corso %}
-      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
-         class="flex items-center gap-3 bg-white rounded-xl shadow-sm p-4
-                hover:shadow-md transition-shadow border-l-4 border-green-400">
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-secondary truncate">{{ m.titolo }}</p>
-          <p class="text-xs text-gray-500 mt-0.5">
-            📍 {{ m.citta }}, {{ m.regione }}
-          </p>
+      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}" class="event-card">
+        <div class="event-datebox">
+          <span class="day">{{ m.data_inizio.strftime('%d') }}</span>
+          <span class="mon">{{ m.data_inizio.strftime('%b') }}</span>
         </div>
-        <div class="shrink-0 text-right">
-          <p class="text-xs text-green-600 font-medium">Fino al</p>
-          <p class="text-xs text-secondary">{{ m.data_fine.strftime('%d/%m') }}</p>
+        <div class="event-card-body">
+          <div class="event-card-title">{{ m.titolo }}</div>
+          <div class="event-card-loc">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.686-7-11.5a7 7 0 1114 0C19 14.314 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            {{ m.citta }}, {{ m.regione }}
+          </div>
         </div>
+        <span class="event-badge in-corso">
+          Fino al {{ m.data_fine.strftime('%d/%m') }}
+        </span>
       </a>
       {% endfor %}
     </div>
   </section>
   {% endif %}
 
-  <!-- PROSSIMI -->
+  <!-- PROSSIMI EVENTI -->
   {% if prossimi %}
   <section>
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">
-        📅 Prossimi eventi
-      </h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="section-label" style="margin-bottom:0">Prossimi eventi</div>
       <a href="{{ url_for('mercatini.index') }}"
-         class="text-xs text-primary hover:underline">Vedi tutti →</a>
+         style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--terra);text-decoration:none">
+        Vedi tutti
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
     </div>
-    <div class="space-y-3">
+    <div style="display:flex;flex-direction:column;gap:8px">
       {% for m in prossimi %}
-      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
-         class="flex items-center gap-3 bg-white rounded-xl shadow-sm p-4
-                hover:shadow-md transition-shadow">
-        <div class="shrink-0 text-center w-10">
-          <p class="text-lg font-bold text-primary leading-none">
-            {{ m.data_inizio.strftime('%d') }}
-          </p>
-          <p class="text-xs text-gray-400 uppercase">
-            {{ m.data_inizio.strftime('%b') }}
-          </p>
+      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}" class="event-card">
+        <div class="event-datebox">
+          <span class="day">{{ m.data_inizio.strftime('%d') }}</span>
+          <span class="mon">{{ m.data_inizio.strftime('%b') }}</span>
         </div>
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-secondary truncate">{{ m.titolo }}</p>
-          <p class="text-xs text-gray-500">📍 {{ m.citta }}, {{ m.regione }}</p>
+        <div class="event-card-body">
+          <div class="event-card-title">{{ m.titolo }}</div>
+          <div class="event-card-loc">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.686-7-11.5a7 7 0 1114 0C19 14.314 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            {{ m.citta }}, {{ m.regione }}
+          </div>
         </div>
-        <div class="shrink-0">
-          <span class="text-xs {% if m.ingresso_gratuito %}text-green-600{% else %}text-gray-500{% endif %}">
-            {{ m.prezzo_display }}
-          </span>
-        </div>
+        {% if m.ingresso_gratuito %}
+          <span class="event-badge gratuito">Gratuito</span>
+        {% else %}
+          <span class="event-badge price">{{ m.prezzo_display }}</span>
+        {% endif %}
       </a>
       {% endfor %}
     </div>
   </section>
   {% endif %}
 
-  <!-- EMPTY STATE (loggato, nessun evento) -->
-  {% if not in_corso and not prossimi %}
-  <div class="text-center py-12 text-gray-400">
-    <p class="text-3xl mb-3">🌱</p>
-    <p class="font-medium text-secondary">Nessun mercatino ancora pubblicato.</p>
-    <a href="{{ url_for('mercatini.nuovo') }}"
-       class="inline-block mt-4 bg-primary text-white text-sm font-medium
-              px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors">
-      Aggiungi mercatino
-    </a>
-  </div>
-  {% endif %}
 
-  {% else %}
-
-  <!-- CTA per utenti anonimi -->
-  <div class="text-center py-10 px-4">
-    <p class="text-5xl mb-4">🏪</p>
-    <h2 class="text-lg font-bold text-secondary mb-2">Scopri i mercatini vicino a te</h2>
-    <p class="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
-      Registrati gratis per vedere tutti gli eventi, ricevere notifiche
-      nella tua provincia e aggiungere i tuoi mercatini.
-    </p>
-    <div class="flex flex-col gap-3 max-w-xs mx-auto">
-      <a href="{{ url_for('auth.register') }}"
-         class="bg-primary text-white text-sm font-semibold px-5 py-3
-                rounded-lg hover:bg-primary-dark transition-colors">
-        Registrati gratis →
-      </a>
-      <a href="{{ url_for('auth.login') }}"
-         class="border border-gray-200 text-secondary text-sm font-medium
-                px-5 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-        Ho già un account — Accedi
+  <!-- ARTIGIANI IN VETRINA -->
+  {% if hobbisti_attivi %}
+  <section>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="section-label" style="margin-bottom:0">
+        <svg width="7" height="7" viewBox="0 0 24 24" fill="var(--terra)" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/></svg>
+        Artigiani in vetrina
+      </div>
+      <a href="{{ url_for('artigiani.elenco') }}"
+         style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;
+                text-transform:uppercase;color:var(--terra);text-decoration:none">
+        Scopri tutti
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             style="display:inline;vertical-align:middle"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
-  </div>
-
+    <div class="art-strip">
+      {% for h in hobbisti_attivi %}
+      <a href="{{ url_for('artigiani.profilo', hobbista_id=h.id) }}" class="art-mini-card">
+        {% if h.foto_di_copertina %}
+        <img src="{{ h.foto_di_copertina.thumb_url }}" alt="{{ h.nome_visualizzato }}"
+             class="art-mini-photo" loading="lazy">
+        {% else %}
+        <div class="art-mini-photo-placeholder">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+        </div>
+        {% endif %}
+        <div class="art-mini-body">
+          <div class="art-mini-nome">{{ h.nome_visualizzato }}</div>
+          <div class="art-mini-spec">{{ (h.specialita or h.bio or 'Artigiano') | truncate(28, True, '…') }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    <p style="font-size:.68rem;color:var(--sand);margin-top:10px;font-family:'DM Mono',monospace;letter-spacing:.05em">
+      Le creazioni sono opere di artigiani hobbisti. I contatti avvengono privatamente tra le parti.
+    </p>
+  </section>
   {% endif %}
 
-  <!-- FEATURE PILLS -->
-  <div class="flex flex-wrap gap-2 justify-center pb-4">
+  <!-- EMPTY STATE -->
+  {% if not in_corso and not prossimi %}
+  <div style="text-align:center;padding:48px 0;color:var(--warm)">
+    <p style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:8px">Nessun mercatino ancora pubblicato.</p>
+    <p style="font-size:.82rem;margin-bottom:20px">Sii il primo ad aggiungere un mercatino nella tua zona.</p>
+    <a href="{{ url_for('mercatini.nuovo') }}" class="btn-home-primary">+ Aggiungi mercatino</a>
+  </div>
+  {% endif %}
+
+  <!-- CTA (solo anonimi) -->
+  {% if not current_user.is_authenticated %}
+  <div class="home-cta">
+    <h3>Vuoi aggiungere i tuoi mercatini?</h3>
+    <p>Registrati gratis per inserire eventi, ricevere notifiche nella tua provincia e usare l'assistente AI.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:260px;margin:0 auto">
+      <a href="{{ url_for('auth.register') }}" class="btn-home-primary" style="justify-content:center">Registrati gratis</a>
+      <a href="{{ url_for('auth.login') }}" class="btn-home-ghost" style="justify-content:center;border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.5)">Ho già un account</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- CATEGORIE PILL -->
+  <div style="display:flex;flex-wrap:wrap;gap:7px;padding-bottom:8px">
     {% for label in ['Artigianato', 'Cibo & Vino', 'Antiquariato', 'Biologico', 'Natale', 'Design'] %}
     <a href="{{ url_for('mercatini.index') }}"
-       class="text-xs bg-white border border-gray-200 text-gray-500 px-3 py-1.5
-              rounded-full hover:border-primary hover:text-primary transition-colors">
+       style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;
+              color:var(--warm);border:1px solid var(--sand);border-radius:100px;
+              padding:5px 12px;text-decoration:none;transition:border-color .2s,color .2s"
+       onmouseenter="this.style.borderColor='var(--terra)';this.style.color='var(--terra)'"
+       onmouseleave="this.style.borderColor='var(--sand)';this.style.color='var(--warm)'">
       {{ label }}
     </a>
     {% endfor %}
@@ -186,144 +360,62 @@
 
 </div>
 
+<!-- PWA Scripts (invariati) -->
+<div id="toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:50;background:var(--ink);color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.06em;padding:10px 20px;border-radius:100px;box-shadow:0 4px 20px rgba(0,0,0,.2)"></div>
+
 {% block scripts %}
-<!-- Modale installazione -->
-<div id="install-modal" class="hidden fixed inset-0 z-50 flex items-end justify-center p-4">
-  <div class="absolute inset-0 bg-black/40" onclick="chiudiModale()"></div>
-  <div class="relative bg-white rounded-2xl shadow-xl p-5 w-full max-w-sm z-10">
-    <h3 class="font-bold text-secondary mb-3 text-base" id="modal-titolo">Installa l'app</h3>
-    <div id="modal-corpo" class="text-sm text-gray-600 space-y-2"></div>
-    <button onclick="chiudiModale()"
-      class="mt-4 w-full bg-primary text-white rounded-lg py-2.5 text-sm font-medium">
-      Ho capito
-    </button>
+<div id="install-modal" style="display:none;position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;padding:16px">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.4)" onclick="chiudiModale()"></div>
+  <div style="position:relative;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:24px;width:100%;max-width:380px;z-index:10">
+    <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:12px" id="modal-titolo">Installa l'app</h3>
+    <div id="modal-corpo" style="font-size:.82rem;color:var(--warm);line-height:1.7"></div>
+    <button onclick="chiudiModale()" class="btn-home-primary" style="width:100%;justify-content:center;margin-top:16px">Ho capito</button>
   </div>
 </div>
 
 <script>
 var _deferredPrompt = null;
-
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  _deferredPrompt = e;
-  // Non serve mostrare/nascondere: il bottone e' sempre visibile
-});
-
-window.addEventListener('appinstalled', function() {
-  _deferredPrompt = null;
-  showToast('App installata! Cercala nella schermata Home.');
-});
+window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); _deferredPrompt = e; });
+window.addEventListener('appinstalled', function() { _deferredPrompt = null; showToast('App installata!'); });
 
 function installaApp() {
   var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
   var isAndroid = /android/i.test(navigator.userAgent);
-  var isStandalone = (window.matchMedia('(display-mode: standalone)').matches
-                      || window.navigator.standalone === true);
-
-  if (isStandalone) {
-    showToast("App già installata!");
-    return;
-  }
-
-  // Android Chrome con prompt disponibile: usa il prompt nativo
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone) { showToast('App gia installata!'); return; }
   if (_deferredPrompt) {
     _deferredPrompt.prompt();
-    _deferredPrompt.userChoice.then(function(r) {
-      if (r.outcome === 'accepted') showToast('Installazione avviata!');
-      _deferredPrompt = null;
-    });
+    _deferredPrompt.userChoice.then(function(r) { if (r.outcome === 'accepted') showToast('Installazione avviata!'); _deferredPrompt = null; });
     return;
   }
-
-  // iOS Safari / Chrome iOS
+  var modal = document.getElementById('install-modal');
+  modal.style.display = 'flex';
   if (isIos) {
     document.getElementById('modal-titolo').textContent = 'Installa su iPhone/iPad';
-    document.getElementById('modal-corpo').innerHTML =
-      '<p><strong>Safari:</strong></p>'
-      + '<ol class="list-decimal ml-4 space-y-1">'
-      + '<li>Tocca il tasto <strong>Condividi</strong> &#x2197; in basso</li>'
-      + '<li>Scorri e scegli <strong>"Aggiungi a schermata Home"</strong></li>'
-      + '<li>Tocca <strong>Aggiungi</strong></li>'
-      + '</ol>'
-      + '<p class="mt-2 text-xs text-gray-400">Se usi Chrome su iOS, apri prima il menu &#8942; e scegli "Apri in Safari".</p>';
-    document.getElementById('install-modal').classList.remove('hidden');
-    return;
-  }
-
-  // Android senza prompt (es. Firefox, Samsung Browser, o Chrome dopo dismiss)
-  if (isAndroid) {
-    document.getElementById('modal-titolo').textContent = 'Installa su Android';
-    document.getElementById('modal-corpo').innerHTML =
-      '<p><strong>Chrome:</strong></p>'
-      + '<ol class="list-decimal ml-4 space-y-1">'
-      + '<li>Tocca il menu <strong>&#8942;</strong> in alto a destra</li>'
-      + '<li>Scegli <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li>'
-      + '</ol>'
-      + '<p class="mt-2 text-xs text-gray-400">Non vedi l&#39;opzione? Prova ad aprire la pagina in Chrome.</p>';
-    document.getElementById('install-modal').classList.remove('hidden');
-    return;
-  }
-
-  // Desktop o altri browser
-  document.getElementById('modal-titolo').textContent = "Installa l’app";
-  document.getElementById('modal-corpo').innerHTML =
-    '<p>Per installare Mercatini come app:</p>'
-    + '<ul class="list-disc ml-4 mt-1 space-y-1">'
-    + '<li><strong>Chrome/Edge:</strong> clicca l&#39;icona &#8855; nella barra degli indirizzi</li>'
-    + '<li><strong>Smartphone:</strong> apri mercatini.blog su Chrome (Android) o Safari (iOS)</li>'
-    + '</ul>';
-  document.getElementById('install-modal').classList.remove('hidden');
-}
-
-function chiudiModale() {
-  document.getElementById('install-modal').classList.add('hidden');
-}
-
-// Web Share / Condividi
-function condividi() {
-  var url  = window.location.href.split('?')[0]; // URL corrente senza query string
-  var data = {
-    title: 'Mercatini Artigianali in Italia',
-    text: 'Scopri i mercatini artigianali vicino a te!',
-    url: url
-  };
-  if (navigator.share) {
-    navigator.share(data).catch(function() { _copyFallback(url); });
-  } else if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url)
-      .then(function() { showToast('\uD83D\uDCCB Link copiato!'); })
-      .catch(function() { _copyFallback(url); });
+    document.getElementById('modal-corpo').innerHTML = '<ol style="list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Tocca <strong>Condividi</strong> in basso</li><li>Scegli <strong>"Aggiungi a schermata Home"</strong></li><li>Tocca <strong>Aggiungi</strong></li></ol>';
   } else {
-    _copyFallback(url);
+    document.getElementById('modal-titolo').textContent = "Installa l'app";
+    document.getElementById('modal-corpo').innerHTML = '<ol style="list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Tocca menu <strong>&#8942;</strong> in alto a destra</li><li>Scegli <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li></ol>';
   }
 }
 
-function _copyFallback(url) {
-  // Funziona anche su HTTP e browser vecchi
-  var inp = document.createElement('input');
-  inp.style.position = 'fixed';
-  inp.style.opacity  = '0';
-  inp.value = url;
-  document.body.appendChild(inp);
-  inp.focus();
-  inp.select();
-  inp.setSelectionRange(0, 99999);
-  try {
-    var ok = document.execCommand('copy');
-    showToast(ok ? '\uD83D\uDCCB Link copiato!' : url);
-  } catch(e) {
-    showToast(url);
-  }
-  document.body.removeChild(inp);
+function chiudiModale() { document.getElementById('install-modal').style.display = 'none'; }
+
+function condividi() {
+  var url = window.location.href.split('?')[0];
+  if (navigator.share) { navigator.share({title:'mercatini.blog',url:url}).catch(function(){_copy(url)}); }
+  else { _copy(url); }
 }
 
-// Toast
-function showToast(msg, ms) {
+function _copy(url) {
+  if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){showToast('Link copiato!')}); }
+  else { var i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();document.execCommand('copy');document.body.removeChild(i);showToast('Link copiato!'); }
+}
+
+function showToast(msg) {
   var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.remove('hidden');
-  clearTimeout(t._tid);
-  t._tid = setTimeout(function() { t.classList.add('hidden'); }, ms || 3000);
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._tid); t._tid = setTimeout(function(){t.style.display='none'}, 3000);
 }
 </script>
 {% endblock %}

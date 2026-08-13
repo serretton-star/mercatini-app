@@ -1,170 +1,213 @@
 {% extends 'base.html' %}
-{% block title %}Mercatini Artigianali in Italia{% endblock %}
+{% block title %}Mercatini Artigianali — {{ nome_mese }} {{ anno }}{% endblock %}
 
 {% block content %}
-<div class="space-y-5">
+<div class="space-y-4 pb-6">
 
-  <!-- Header + CTA -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-xl font-bold text-secondary">Mercatini</h1>
-      {% if totale_risultati is defined %}
-      <p class="text-xs text-gray-400 mt-0.5">
-        {{ totale_risultati }} risultat{{ 'o' if totale_risultati == 1 else 'i' }}
-      </p>
+  <!-- Titolo -->
+  <div>
+    <h1 class="text-xl font-bold text-secondary">Mercatini Artigianali</h1>
+    <p class="text-xs text-gray-400 mt-0.5">Fiere, esposizioni, hobbisti — tutta Italia</p>
+  </div>
+
+  <!-- Navigazione mese -->
+  <div class="flex items-center justify-between bg-white rounded-xl shadow-sm px-4 py-3">
+    <a href="{{ url_for('mercatini.index', mese=prev_mese, anno=prev_anno,
+               q=filtro_q, regione=filtro_regione, categoria=filtro_cat) }}"
+       class="text-gray-400 hover:text-secondary text-2xl font-light w-8 text-center">‹</a>
+    <span class="font-semibold text-secondary">{{ nome_mese }} {{ anno }}</span>
+    <a href="{{ url_for('mercatini.index', mese=next_mese, anno=next_anno,
+               q=filtro_q, regione=filtro_regione, categoria=filtro_cat) }}"
+       class="text-gray-400 hover:text-secondary text-2xl font-light w-8 text-center">›</a>
+  </div>
+
+  <!-- Filtri categoria (pills orizzontali) -->
+  <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
+    <a href="{{ url_for('mercatini.index', mese=mese, anno=anno,
+               q=filtro_q, regione=filtro_regione,
+               lat=user_lat, lon=user_lon, raggio=raggio if user_lat else '') }}"
+       class="shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors
+              {{ 'bg-secondary text-white border-secondary' if not filtro_cat
+                 else 'bg-white text-gray-600 border-gray-200 hover:border-secondary hover:text-secondary' }}">
+      Tutti
+    </a>
+    {% for c in categorie %}
+    <a href="{{ url_for('mercatini.index', mese=mese, anno=anno,
+               categoria=c.id, q=filtro_q, regione=filtro_regione,
+               lat=user_lat, lon=user_lon, raggio=raggio if user_lat else '') }}"
+       class="shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors
+              {{ 'bg-secondary text-white border-secondary' if filtro_cat == c.id
+                 else 'bg-white text-gray-600 border-gray-200 hover:border-secondary hover:text-secondary' }}">
+      {{ c.nome }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Ricerca + Vicino a me -->
+  <form method="GET" action="{{ url_for('mercatini.index') }}" class="space-y-2" id="form-ricerca">
+    <input type="hidden" name="mese" value="{{ mese }}">
+    <input type="hidden" name="anno" value="{{ anno }}">
+    <input type="hidden" name="categoria" value="{{ filtro_cat }}">
+    <input type="hidden" name="lat" id="input-lat" value="{{ user_lat or '' }}">
+    <input type="hidden" name="lon" id="input-lon" value="{{ user_lon or '' }}">
+    <input type="hidden" name="raggio" id="input-raggio" value="{{ raggio }}">
+
+    <div class="flex gap-2">
+      <div class="relative flex-1">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+        <input type="text" name="q" value="{{ filtro_q }}"
+               placeholder="Cerca nome o città..."
+               class="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-primary/30">
+      </div>
+      <!-- Bottone Vicino a me -->
+      <button type="button" id="btn-vicino"
+              onclick="cercaVicino()"
+              class="shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border transition-colors
+                     {{ 'bg-primary text-white border-primary' if user_lat else 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary' }}">
+        <span id="geo-icon">📍</span>
+        <span class="hidden sm:inline">{{ 'Vicino a me' if not user_lat else raggio|string + ' km' }}</span>
+      </button>
+      <button type="submit"
+              class="bg-secondary text-white text-sm px-3 py-2 rounded-lg hover:opacity-90 transition-opacity">
+        Cerca
+      </button>
+    </div>
+
+    {% if filtro_q or filtro_regione or user_lat %}
+    <div class="flex gap-2 flex-wrap">
+      {% if user_lat %}
+      <!-- Banner geolocalizzazione attiva + selettore raggio -->
+      <div class="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-1.5 text-xs">
+        <span class="text-primary font-medium">📍 Vicino a te — entro</span>
+        {% for r in [10, 25, 50, 100] %}
+        <button type="button"
+                onclick="setRaggio({{ r }})"
+                class="px-2 py-0.5 rounded-full font-semibold transition-colors
+                       {{ 'bg-primary text-white' if raggio == r else 'bg-white text-gray-600 hover:bg-primary hover:text-white' }}">
+          {{ r }} km
+        </button>
+        {% endfor %}
+        <a href="{{ url_for('mercatini.index', mese=mese, anno=anno,
+                   q=filtro_q, regione=filtro_regione, categoria=filtro_cat) }}"
+           class="ml-1 text-gray-400 hover:text-gray-600">✕</a>
+      </div>
+      {% endif %}
+      {% if filtro_q %}
+      <span class="bg-gray-100 text-gray-600 text-xs rounded-full px-3 py-1">
+        "{{ filtro_q }}"
+        <a href="{{ url_for('mercatini.index', mese=mese, anno=anno, categoria=filtro_cat,
+                   lat=user_lat, lon=user_lon, raggio=raggio if user_lat else '') }}"
+           class="ml-1 text-gray-400 hover:text-gray-600">✕</a>
+      </span>
       {% endif %}
     </div>
+    {% endif %}
+  </form>
+
+  <!-- Risultati header -->
+  <div class="flex items-center justify-between">
+    <p class="text-xs text-gray-400">
+      {{ totale_risultati }} mercatin{{ 'o' if totale_risultati == 1 else 'i' }}
+      {% if user_lat %} entro {{ raggio }} km{% endif %}
+    </p>
+    {% if mostra_tutti %}
+    <a href="{{ url_for('mercatini.index', mese=mese, anno=anno) }}"
+       class="text-xs text-primary hover:underline">← Solo {{ nome_mese }}</a>
+    {% endif %}
     {% if current_user.is_authenticated %}
     <a href="{{ url_for('mercatini.nuovo') }}"
-       class="bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg
-              hover:bg-primary-dark transition-colors">
+       class="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:opacity-90">
       + Aggiungi
     </a>
     {% endif %}
   </div>
 
-  <!-- Filtri + Ricerca -->
-  <form method="GET" action="{{ url_for('mercatini.index') }}"
-        class="bg-white rounded-xl shadow-sm p-4 space-y-3">
-
-    <!-- Barra ricerca -->
-    <div class="relative">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-      <input type="text" name="q" value="{{ filtro_q }}"
-             placeholder="Cerca per nome, città, regione..."
-             class="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-2 text-sm
-                    focus:outline-none focus:ring-2 focus:ring-primary/30">
-    </div>
-
-    <!-- Filtri secondari -->
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Regione</label>
-        <input type="text" name="regione" value="{{ filtro_regione }}"
-               placeholder="es. Lombardia"
-               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:ring-2 focus:ring-primary/30">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Città</label>
-        <input type="text" name="citta" value="{{ filtro_citta }}"
-               placeholder="es. Milano"
-               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:ring-2 focus:ring-primary/30">
-      </div>
-    </div>
-
-    <!-- Provincia -->
-    <div>
-      <label class="block text-xs font-medium text-gray-500 mb-1">Provincia</label>
-      <input type="text" name="provincia" value="{{ filtro_provincia }}"
-             placeholder="es. MI, Roma, Torino..."
-             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                    focus:outline-none focus:ring-2 focus:ring-primary/30">
-    </div>
-
-    <!-- Date (intervallo) -->
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Dal</label>
-        <input type="date" name="data_dal" value="{{ filtro_data_dal }}"
-               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:ring-2 focus:ring-primary/30">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Al</label>
-        <input type="date" name="data_al" value="{{ filtro_data_al }}"
-               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                      focus:outline-none focus:ring-2 focus:ring-primary/30">
-      </div>
-    </div>
-
-    {% if categorie %}
-    <div>
-      <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
-      <select name="categoria"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary/30">
-        <option value="0">Tutte</option>
-        {% for c in categorie %}
-        <option value="{{ c.id }}" {% if filtro_cat == c.id %}selected{% endif %}>
-          {{ c.nome }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
-    {% endif %}
-
-    <div class="flex gap-2">
-      <button type="submit"
-              class="flex-1 bg-secondary text-white text-sm font-medium py-2 rounded-lg
-                     hover:bg-secondary-light transition-colors">
-        Cerca
-      </button>
-      {% if filtro_q or filtro_regione or filtro_citta or filtro_cat or filtro_provincia or filtro_data_dal or filtro_data_al %}
-      <a href="{{ url_for('mercatini.index') }}"
-         class="px-4 py-2 border border-gray-200 text-gray-500 text-sm rounded-lg
-                hover:bg-gray-50 transition-colors">
-        ✕
-      </a>
-      {% endif %}
-    </div>
-  </form>
-
-  <!-- Lista -->
+  <!-- Lista mercatini -->
   {% if mercatini %}
   <div class="space-y-3">
     {% for m in mercatini %}
     <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}"
-       class="block bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
-      <div class="flex justify-between items-start gap-2">
-        <div class="flex-1 min-w-0">
-          <h2 class="font-semibold text-secondary truncate">{{ m.titolo }}</h2>
-          <p class="text-sm text-gray-500 mt-0.5">
-            📍 {{ m.citta }}{% if m.provincia %} ({{ m.provincia }}){% endif %}, {{ m.regione }}
-          </p>
-          <p class="text-sm text-primary font-medium mt-1">
-            📅 {{ m.data_inizio.strftime('%d/%m/%Y') }}
-            {% if m.data_fine != m.data_inizio %}– {{ m.data_fine.strftime('%d/%m/%Y') }}{% endif %}
-          </p>
+       class="flex gap-3 bg-white rounded-xl shadow-sm p-3 hover:shadow-md
+              transition-shadow items-start group">
+
+      <!-- Date box -->
+      <div class="shrink-0 w-12 text-center bg-secondary rounded-lg py-2">
+        <div class="text-white font-bold text-xl leading-tight">{{ m.data_inizio.day }}</div>
+        <div class="text-white/70 text-xs font-medium uppercase tracking-wide">
+          {{ mesi_short[m.data_inizio.month - 1] }}
         </div>
-        <div class="shrink-0 text-right">
-          <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full
-            {% if m.is_in_corso %}bg-green-100 text-green-700
-            {% elif m.is_futuro %}bg-blue-100 text-blue-700
-            {% else %}bg-gray-100 text-gray-500{% endif %}">
-            {% if m.is_in_corso %}In corso{% elif m.is_futuro %}Prossimo{% else %}Passato{% endif %}
+      </div>
+
+      <!-- Contenuto card -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-2">
+          <h2 class="font-semibold text-secondary text-sm leading-snug group-hover:text-primary transition-colors">
+            {{ m.titolo }}
+          </h2>
+          <div class="shrink-0 flex items-center gap-1.5">
+            {% if distanze.get(m.id) is not none %}
+            <span class="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+              {{ distanze[m.id] }} km
+            </span>
+            {% endif %}
+            <span class="text-xs font-medium px-1.5 py-0.5 rounded-full leading-tight
+              {% if m.is_in_corso %}bg-green-100 text-green-700
+              {% elif m.is_futuro %}bg-blue-50 text-blue-600
+              {% else %}bg-gray-100 text-gray-400{% endif %}">
+              {% if m.is_in_corso %}In corso{% elif m.is_futuro %}Prossimo{% else %}Passato{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-0.5">
+          📍 {{ m.citta }}{% if m.provincia %} ({{ m.provincia }}){% endif %}, {{ m.regione }}
+        </p>
+
+        {% if m.data_fine and m.data_fine != m.data_inizio %}
+        <p class="text-xs text-gray-400 mt-0.5">
+          {{ m.data_inizio.strftime('%d/%m') }} – {{ m.data_fine.strftime('%d/%m/%Y') }}
+        </p>
+        {% endif %}
+
+        <div class="flex items-center flex-wrap gap-2 mt-1.5">
+          <span class="text-xs {% if 'gratuito' in m.prezzo_display|lower %}text-green-600 font-medium{% else %}text-gray-500{% endif %}">
+            {{ m.prezzo_display }}
           </span>
-          <p class="text-xs text-gray-400 mt-1">{{ m.prezzo_display }}</p>
+          <span class="text-xs text-indigo-400 font-medium">✓ Verificato</span>
+          {% for cat in m.categorie %}
+          <span class="text-xs bg-warm-dark text-secondary px-2 py-0.5 rounded-full">
+            {{ cat.nome }}
+          </span>
+          {% endfor %}
         </div>
+
+        {% if m.descrizione %}
+        <p class="text-xs text-gray-400 mt-1.5 line-clamp-1">
+          {{ m.descrizione[:100] }}
+        </p>
+        {% endif %}
       </div>
-      {% if m.categorie %}
-      <div class="flex flex-wrap gap-1 mt-2">
-        {% for c in m.categorie %}
-        <span class="text-xs bg-warm-dark text-secondary px-2 py-0.5 rounded-full">{{ c.nome }}</span>
-        {% endfor %}
-      </div>
-      {% endif %}
     </a>
     {% endfor %}
   </div>
 
   <!-- Paginazione -->
   {% if pagination.pages > 1 %}
-  <div class="flex justify-center gap-2">
+  <div class="flex justify-center gap-2 pt-1">
     {% if pagination.has_prev %}
-    <a href="{{ url_for('mercatini.index', page=pagination.prev_num, q=filtro_q,
-               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat,
-               provincia=filtro_provincia, data_dal=filtro_data_dal, data_al=filtro_data_al) }}"
+    <a href="{{ url_for('mercatini.index', page=pagination.prev_num, mese=mese, anno=anno,
+               q=filtro_q, regione=filtro_regione, categoria=filtro_cat,
+               lat=user_lat, lon=user_lon, raggio=raggio if user_lat else '') }}"
        class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">← Prec</a>
     {% endif %}
-    <span class="px-3 py-1.5 text-sm text-gray-500">
+    <span class="px-3 py-1.5 text-sm text-gray-400">
       {{ pagination.page }} / {{ pagination.pages }}
     </span>
     {% if pagination.has_next %}
-    <a href="{{ url_for('mercatini.index', page=pagination.next_num, q=filtro_q,
-               regione=filtro_regione, citta=filtro_citta, categoria=filtro_cat,
-               provincia=filtro_provincia, data_dal=filtro_data_dal, data_al=filtro_data_al) }}"
+    <a href="{{ url_for('mercatini.index', page=pagination.next_num, mese=mese, anno=anno,
+               q=filtro_q, regione=filtro_regione, categoria=filtro_cat,
+               lat=user_lat, lon=user_lon, raggio=raggio if user_lat else '') }}"
        class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">Succ →</a>
     {% endif %}
   </div>
@@ -172,25 +215,112 @@
 
   {% else %}
   <!-- Empty state -->
-  <div class="text-center py-16 text-gray-400">
-    <p class="text-4xl mb-3">🔍</p>
-    {% if filtro_q or filtro_regione or filtro_citta or filtro_cat or filtro_provincia or filtro_data_dal or filtro_data_al %}
-    <p class="font-medium">Nessun risultato per i filtri applicati.</p>
-    <a href="{{ url_for('mercatini.index') }}"
-       class="inline-block mt-3 text-primary text-sm hover:underline">
-      Rimuovi filtri →
-    </a>
+  <div class="text-center py-14 text-gray-400">
+    <p class="text-4xl mb-3">{{ '📍' if user_lat else '📅' }}</p>
+    <p class="font-medium text-gray-500 text-sm">
+      {% if user_lat %}
+        Nessun mercatino entro {{ raggio }} km da te per {{ nome_mese }} {{ anno }}
+      {% else %}
+        Nessun mercatino per {{ nome_mese }} {{ anno }}
+      {% endif %}
+    </p>
+    {% if user_lat %}
+    <button type="button" onclick="setRaggio(100)"
+            class="inline-block mt-2 text-primary text-sm hover:underline">
+      Allarga a 100 km →
+    </button>
     {% else %}
-    <p class="font-medium">Nessun mercatino ancora pubblicato.</p>
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('mercatini.nuovo') }}"
-       class="inline-block mt-3 text-primary text-sm hover:underline">
-      Aggiungi il primo →
+    <a href="{{ url_for('mercatini.index', mese=mese, anno=anno, mostra_tutti='1') }}"
+       class="inline-block mt-2 text-primary text-sm hover:underline">
+      Vedi tutti i mercatini →
     </a>
-    {% endif %}
     {% endif %}
   </div>
   {% endif %}
 
+  <!-- CTA bottom -->
+  {% if not current_user.is_authenticated %}
+  <div class="grid grid-cols-2 gap-3 pt-2">
+    <a href="{{ url_for('auth.register') }}"
+       class="text-center bg-secondary text-white text-sm font-semibold py-3 rounded-xl
+              hover:opacity-90 transition-opacity">
+      Registrati gratis
+    </a>
+    <button onclick="document.getElementById('modal-avvisami').classList.remove('hidden')"
+            class="text-center bg-white border border-secondary text-secondary text-sm
+                   font-semibold py-3 rounded-xl hover:bg-secondary/5 transition-colors">
+      🔔 Avvisami
+    </button>
+  </div>
+  {% else %}
+  <a href="{{ url_for('mercatini.nuovo') }}"
+     class="block text-center bg-primary text-white text-sm font-semibold py-3 rounded-xl
+            hover:opacity-90 transition-opacity">
+    + Aggiungi un mercatino
+  </a>
+  {% endif %}
+
 </div>
+
+<!-- Modal Avvisami -->
+<div id="modal-avvisami"
+     class="hidden fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+    <h3 class="font-bold text-secondary text-lg mb-1">🔔 Ricevi avvisi</h3>
+    <p class="text-sm text-gray-500 mb-4">
+      Ti avvisiamo quando ci sono nuovi mercatini nella tua zona.
+      Niente spam, solo mercatini.
+    </p>
+    <a href="{{ url_for('auth.register') }}"
+       class="block w-full text-center bg-secondary text-white text-sm font-semibold
+              py-3 rounded-xl hover:opacity-90 transition-opacity mb-3">
+      Registrati gratis per ricevere avvisi
+    </a>
+    <button onclick="document.getElementById('modal-avvisami').classList.add('hidden')"
+            class="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1">
+      Annulla
+    </button>
+  </div>
+</div>
+
+<script>
+function cercaVicino() {
+  var btn = document.getElementById('btn-vicino');
+  var icon = document.getElementById('geo-icon');
+  if (!navigator.geolocation) {
+    alert('Il tuo browser non supporta la geolocalizzazione.');
+    return;
+  }
+  // Se già attivo, disattiva
+  var latVal = document.getElementById('input-lat').value;
+  if (latVal) {
+    document.getElementById('input-lat').value = '';
+    document.getElementById('input-lon').value = '';
+    document.getElementById('form-ricerca').submit();
+    return;
+  }
+  icon.textContent = '⏳';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      document.getElementById('input-lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('input-lon').value = pos.coords.longitude.toFixed(6);
+      document.getElementById('form-ricerca').submit();
+    },
+    function(err) {
+      icon.textContent = '📍';
+      btn.disabled = false;
+      if (err.code === 1) alert('Permesso negato. Abilita la posizione nelle impostazioni del browser.');
+      else alert('Impossibile ottenere la posizione. Riprova.');
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function setRaggio(km) {
+  document.getElementById('input-raggio').value = km;
+  document.getElementById('form-ricerca').submit();
+}
+</script>
 {% endblock %}

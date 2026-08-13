@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Accedi — Profilo Artigiano{% endblock %}
+
+{% block content %}
+<div style="max-width:400px;margin:0 auto">
+  <a href="{{ url_for('artigiani.elenco') }}"
+     style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--warm);text-decoration:none;
+            display:inline-flex;align-items:center;gap:6px;margin-bottom:28px">
+    ← Artigiani
+  </a>
+
+  <div class="section-label" style="margin-bottom:10px">Area riservata</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:1.9rem;font-weight:900;
+             letter-spacing:-.03em;margin-bottom:28px">
+    Accedi al tuo profilo
+  </h1>
+
+  <form method="POST" style="display:flex;flex-direction:column;gap:16px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.65rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">Email</label>
+      <input type="email" name="email" required autofocus
+             placeholder="la-tua@email.it"
+             style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                    padding:10px 14px;font-family:'DM Sans',sans-serif;
+                    font-size:.9rem;background:#fff;color:var(--ink)">
+    </div>
+
+    <div>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:.65rem;
+                    letter-spacing:.08em;text-transform:uppercase;color:var(--warm);
+                    margin-bottom:6px">Password</label>
+      <input type="password" name="password" required
+             placeholder="La tua password"
+             style="width:100%;border:1px solid var(--sand);border-radius:8px;
+                    padding:10px 14px;font-family:'DM Sans',sans-serif;
+                    font-size:.9rem;background:#fff;color:var(--ink)">
+    </div>
+
+    <button type="submit"
+            style="background:var(--terra);color:#fff;border:none;border-radius:8px;
+                   padding:12px;font-family:'DM Sans',sans-serif;font-size:.92rem;
+                   font-weight:600;cursor:pointer;transition:background .2s"
+            onmouseenter="this.style.background='var(--terra2)'"
+            onmouseleave="this.style.background='var(--terra)'">
+      Accedi
+    </button>
+
+    <div style="text-align:center;display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:.82rem;color:var(--warm)">
+        Non hai ancora un profilo?
+        <a href="{{ url_for('artigiani_auth.registrati') }}" style="color:var(--terra)">
+          Crealo gratis
+        </a>
+      </span>
+    </div>
+  </form>
+</div>
+{% endblock %}

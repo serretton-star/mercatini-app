@@ -10,7 +10,7 @@ from datetime import datetime, timezone, date as _date
 
 import anthropic
 from flask import render_template, request, jsonify, session, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import or_
 
 from app import db
@@ -225,6 +225,7 @@ def ask():
     history.append({'role': 'assistant', 'content': reply})
     session['chat_history'] = history[-(MAX_EXCHANGES * 2):]
     session.modified = True
+    current_user.increment_chat()
 
     # Card: SOLO mercatini che matchano la query, nessun fallback
     oggi = _date.today()

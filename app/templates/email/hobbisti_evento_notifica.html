@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nuovo evento — mercatini.blog</title>
+<style>
+  body{margin:0;padding:0;background:#F5F1EB;font-family:'DM Sans',Helvetica,Arial,sans-serif}
+  .wrap{max-width:580px;margin:32px auto;background:#fff;border-radius:12px;
+        overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .hdr{background:#2C1810;padding:28px 32px;text-align:center}
+  .hdr a{color:#F5C78E;font-family:Georgia,serif;font-size:1.3rem;font-weight:700;
+          text-decoration:none;letter-spacing:-.02em}
+  .body{padding:32px}
+  .h1{font-family:Georgia,serif;font-size:1.4rem;font-weight:700;color:#2C1810;
+      line-height:1.25;margin:0 0 16px}
+  p{font-size:.9rem;color:#4A3728;line-height:1.65;margin:0 0 12px}
+  .btn{display:inline-block;background:#C0522A;color:#fff;text-decoration:none;
+       font-weight:600;font-size:.85rem;border-radius:8px;padding:12px 24px;margin:16px 0}
+  .card{background:#F5F1EB;border-radius:10px;padding:16px 18px;margin:16px 0}
+  .card-nome{font-family:Georgia,serif;font-weight:700;color:#2C1810;font-size:1rem;margin:0 0 4px}
+  .card-sub{font-size:.78rem;color:#8B6B52;margin:0}
+  .photo-row{display:flex;gap:10px;margin:12px 0}
+  .photo-row img{width:90px;height:90px;object-fit:cover;border-radius:8px;display:block}
+  .ftr{background:#F5F1EB;padding:18px 32px;font-size:.72rem;color:#8B6B52;
+       text-align:center;line-height:1.7}
+  .ftr a{color:#C0522A;text-decoration:none}
+  hr{border:none;border-top:1px solid #EDE8E0;margin:24px 0}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="hdr"><a href="https://mercatini.blog">mercatini.blog</a></div>
+  <div class="body">
+    <p style="font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;
+               text-transform:uppercase;color:#8B6B52;margin-bottom:8px">Aggiornamento artigiano</p>
+    <h1 class="h1">{{ hobbista.nome_visualizzato }} parteciperà a<br>{{ partecipazione.nome_evento_display }}</h1>
+
+    <div class="card">
+      <p class="card-nome">📍 {{ partecipazione.luogo_display }}</p>
+      {%- if partecipazione.data_evento_display %}
+      <p class="card-sub">🗓 {{ partecipazione.data_evento_display.strftime('%d %B %Y') }}</p>
+      {%- endif %}
+    </div>
+
+    {%- if partecipazione.messaggio_breve %}
+    <p style="border-left:3px solid #C0522A;padding-left:14px;font-style:italic;color:#2C1810">
+      "{{ partecipazione.messaggio_breve }}"
+    </p>
+    {%- endif %}
+
+    <p>{{ hobbista.nome_visualizzato }} sarà presente
+      {%- if partecipazione.mercatino %}
+        al <strong>{{ partecipazione.mercatino.titolo }}</strong>
+        a {{ partecipazione.mercatino.citta }}.
+      {%- else %}
+        all'evento <strong>{{ partecipazione.nome_evento_display }}</strong>
+        {%- if partecipazione.luogo_display %} a {{ partecipazione.luogo_display }}{%- endif %}.
+      {%- endif %}
+      <br>Visita il suo profilo per scoprire le sue creazioni.
+    </p>
+
+    <a class="btn" href="https://mercatini.blog{{ url_for('artigiani.profilo', hobbista_id=hobbista.id) }}">
+      Vedi il profilo di {{ hobbista.nome_visualizzato }} →
+    </a>
+
+    {%- if partecipazione.mercatino %}
+    <p style="margin-top:8px">
+      <a href="https://mercatini.blog{{ url_for('mercatini.dettaglio', id=partecipazione.mercatino.id) }}"
+         style="color:#C0522A;font-size:.82rem">Vai alla pagina del mercatino →</a>
+    </p>
+    {%- endif %}
+
+    <hr>
+    <p style="font-size:.78rem;color:#8B6B52">
+      Ricevi questa email perché segui <strong>{{ hobbista.nome_visualizzato }}</strong>
+      su mercatini.blog.<br>
+      <a href="https://mercatini.blog{{ url_for('account.seguiti') }}">Gestisci le tue preferenze</a> ·
+      <a href="https://mercatini.blog{{ url_for('account.unsubscribe_artigiani', token=unsub_token, tipo='eventi') }}">
+        Disattiva queste notifiche</a>
+    </p>
+  </div>
+  <div class="ftr">
+    © {{ current_year }} mercatini.blog — fatto con ♥ in Italia<br>
+    <a href="https://mercatini.blog/privacy">Privacy</a>
+  </div>
+</div>
+</body></html>

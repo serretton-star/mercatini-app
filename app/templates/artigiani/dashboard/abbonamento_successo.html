@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Abbonamento attivato — mercatini.blog{% endblock %}
+{% block content %}
+<div style="max-width:480px;margin:60px auto;text-align:center;padding:0 20px">
+  <div style="font-size:3rem;margin-bottom:16px">🎉</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;
+             letter-spacing:-.03em;margin-bottom:10px">
+    Abbonamento attivato!
+  </h1>
+  <p style="color:var(--warm);font-size:.92rem;line-height:1.6;margin-bottom:28px">
+    Grazie {{ hobbista.nome_visualizzato.split()[0] }}! Il tuo nuovo piano è attivo.
+    Puoi ora caricare più foto e accedere a tutte le funzionalità incluse.
+  </p>
+  <a href="{{ url_for('artigiani.dashboard') }}"
+     style="display:inline-flex;align-items:center;gap:8px;
+            background:var(--terra);color:#fff;text-decoration:none;
+            font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;
+            border-radius:10px;padding:12px 24px">
+    Vai alla Dashboard →
+  </a>
+  <div style="margin-top:20px">
+    <a href="{{ url_for('artigiani.abbonamento') }}"
+       style="font-size:.8rem;color:var(--warm);text-decoration:none">
+      Vedi dettagli abbonamento
+    </a>
+  </div>
+</div>
+{% endblock %}

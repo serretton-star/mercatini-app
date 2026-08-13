@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Pagamento annullato — mercatini.blog{% endblock %}
+{% block content %}
+<div style="max-width:480px;margin:60px auto;text-align:center;padding:0 20px">
+  <div style="font-size:3rem;margin-bottom:16px">↩️</div>
+  <h1 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;
+             letter-spacing:-.03em;margin-bottom:10px">
+    Pagamento annullato
+  </h1>
+  <p style="color:var(--warm);font-size:.92rem;line-height:1.6;margin-bottom:28px">
+    Nessun addebito è stato effettuato.
+    Puoi riprovare in qualsiasi momento o contattarci se hai bisogno di aiuto.
+  </p>
+  <a href="{{ url_for('artigiani.abbonamento') }}"
+     style="display:inline-flex;align-items:center;gap:8px;
+            background:var(--terra);color:#fff;text-decoration:none;
+            font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;
+            border-radius:10px;padding:12px 24px">
+    Torna ai piani →
+  </a>
+</div>
+{% endblock %}

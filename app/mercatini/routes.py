@@ -67,20 +67,58 @@ def _populate_categorie(form):
 
 
 # ------------------------------------------------------------------
-# Lista mercatini
+# ------------------------------------------------------------------
+# Lista mercatini (pubblica, stile directory)
 # ------------------------------------------------------------------
 @mercatini.route('/')
 def index():
-    page = request.args.get('page', 1, type=int)
-    q = request.args.get('q', '', type=str).strip()
+    import calendar as _cal, math as _math
+    from datetime import date as _date_cls
+
+    def _haversine(lat1, lon1, lat2, lon2):
+        R = 6371.0
+        ph1, ph2 = _math.radians(lat1), _math.radians(lat2)
+        dp = _math.radians(lat2 - lat1)
+        dl = _math.radians(lon2 - lon1)
+        a = _math.sin(dp/2)**2 + _math.cos(ph1)*_math.cos(ph2)*_math.sin(dl/2)**2
+        return round(R * 2 * _math.atan2(_math.sqrt(a), _math.sqrt(1-a)), 1)
+
+    class _FakePag:
+        def __init__(self, items, page, per_page, total):
+            self.items = items; self.page = page; self.per_page = per_page
+            self.total = total
+            self.pages = max(1, (total + per_page - 1) // per_page)
+            self.has_prev = page > 1; self.has_next = page < self.pages
+            self.prev_num = page - 1; self.next_num = page + 1
+
+    oggi = _date_cls.today()
+    anno = request.args.get('anno', oggi.year, type=int)
+    mese = request.args.get('mese', oggi.month, type=int)
+    anno = max(2020, min(2035, anno))
+    mese = max(1, min(12, mese))
+
+    page  = request.args.get('page', 1, type=int)
+    q     = request.args.get('q', '', type=str).strip()
     regione = request.args.get('regione', '', type=str).strip()
-    citta = request.args.get('citta', '', type=str).strip()
-    cat_id = request.args.get('categoria', 0, type=int)
-    provincia = request.args.get('provincia', '', type=str).strip()
-    data_dal = request.args.get('data_dal', '', type=str).strip()
-    data_al  = request.args.get('data_al',  '', type=str).strip()
+    cat_id  = request.args.get('categoria', 0, type=int)
+    mostra_tutti = request.args.get('mostra_tutti', '') == '1'
+
+    # Geolocalizzazione
+    user_lat = request.args.get('lat', None, type=float)
+    user_lon = request.args.get('lon', None, type=float)
+    raggio   = request.args.get('raggio', 50, type=int)
+    if raggio not in (10, 25, 50, 100):
+        raggio = 50
 
     query = Mercatino.query.filter_by(pubblicato=True)
+
+    if not mostra_tutti:
+        first_day = _date_cls(anno, mese, 1)
+        last_day  = _date_cls(anno, mese, _cal.monthrange(anno, mese)[1])
+        query = query.filter(
+            Mercatino.data_inizio <= last_day,
+            Mercatino.data_fine   >= first_day
+        )
 
     if q:
         pattern = f'%{q}%'
@@ -92,29 +130,41 @@ def index():
         ))
     if regione:
         query = query.filter(Mercatino.regione.ilike(f'%{regione}%'))
-    if citta:
-        query = query.filter(Mercatino.citta.ilike(f'%{citta}%'))
     if cat_id:
         query = query.join(Mercatino.categorie).filter(Categoria.id == cat_id)
-    if provincia:
-        query = query.filter(Mercatino.provincia.ilike(f'%{provincia}%'))
-    if data_dal:
-        try:
-            from datetime import date as _d
-            query = query.filter(Mercatino.data_fine >= _d.fromisoformat(data_dal))
-        except ValueError:
-            pass
-    if data_al:
-        try:
-            from datetime import date as _d
-            query = query.filter(Mercatino.data_inizio <= _d.fromisoformat(data_al))
-        except ValueError:
-            pass
 
-    query = query.order_by(Mercatino.data_inizio.asc())
-    pagination = query.paginate(page=page, per_page=12, error_out=False)
+    distanze = {}
+    if user_lat and user_lon:
+        # Filtra e ordina per distanza (fetch all, poi pagina in Python)
+        tutti = query.order_by(Mercatino.data_inizio.asc()).all()
+        vicini = []
+        for m in tutti:
+            if m.lat and m.lon:
+                d = _haversine(user_lat, user_lon, float(m.lat), float(m.lon))
+                if d <= raggio:
+                    distanze[m.id] = d
+                    vicini.append(m)
+        vicini.sort(key=lambda m: distanze.get(m.id, 9999))
+        per_page = 15
+        total = len(vicini)
+        start = (page - 1) * per_page
+        pagination = _FakePag(vicini[start:start+per_page], page, per_page, total)
+    else:
+        query = query.order_by(Mercatino.data_inizio.asc())
+        pagination = query.paginate(page=page, per_page=15, error_out=False)
 
     categorie = Categoria.query.order_by(Categoria.nome).all()
+
+    MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+               'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
+    MESI_SHORT = ['GEN','FEB','MAR','APR','MAG','GIU',
+                  'LUG','AGO','SET','OTT','NOV','DIC']
+
+    prev_mese = mese - 1 if mese > 1 else 12
+    prev_anno = anno if mese > 1 else anno - 1
+    next_mese = mese + 1 if mese < 12 else 1
+    next_anno = anno if mese < 12 else anno + 1
+
     return render_template(
         'mercatini/index.html',
         mercatini=pagination.items,
@@ -122,18 +172,19 @@ def index():
         categorie=categorie,
         filtro_q=q,
         filtro_regione=regione,
-        filtro_citta=citta,
         filtro_cat=cat_id,
-        filtro_provincia=provincia,
-        filtro_data_dal=data_dal,
-        filtro_data_al=data_al,
+        mostra_tutti=mostra_tutti,
+        anno=anno, mese=mese,
+        nome_mese=MESI_IT[mese-1],
+        mesi_short=MESI_SHORT,
+        prev_mese=prev_mese, prev_anno=prev_anno,
+        next_mese=next_mese, next_anno=next_anno,
         totale_risultati=pagination.total,
+        user_lat=user_lat, user_lon=user_lon, raggio=raggio,
+        distanze=distanze,
     )
 
 
-# ------------------------------------------------------------------
-# Dettaglio mercatino
-# ------------------------------------------------------------------
 @mercatini.route('/<int:id>')
 def dettaglio(id):
     m = Mercatino.query.get_or_404(id)
@@ -652,6 +703,96 @@ def ai_crea_batch():
     if creati:
         db.session.commit()
     return jsonify({'ok': True, 'creati': creati, 'errori': errori})
+
+
+# ------------------------------------------------------------------
+# Mappa eventi
+# ------------------------------------------------------------------
+@mercatini.route('/mappa')
+def mappa():
+    from datetime import date
+    oggi = date.today()
+    totale = Mercatino.query.filter(
+        Mercatino.pubblicato == True,
+        Mercatino.data_fine >= oggi,
+    ).count()
+    return render_template('mercatini/mappa.html', totale=totale)
+
+
+@mercatini.route('/api/mappa-data')
+def mappa_data():
+    from datetime import date
+    from flask import jsonify as _json
+    oggi = date.today()
+    mercatini_q = (
+        Mercatino.query
+        .filter(Mercatino.pubblicato == True, Mercatino.data_fine >= oggi)
+        .order_by(Mercatino.data_inizio)
+        .all()
+    )
+    # Coord centri province italiane (fallback se lat/lon mancano)
+    PROV = {
+        'AG':(37.32,13.58),'AL':(44.91,8.62),'AN':(43.62,13.51),
+        'AO':(45.74,7.32),'AP':(42.85,13.58),'AQ':(42.35,13.40),
+        'AR':(43.46,11.88),'AT':(44.90,8.21),'AV':(40.91,15.03),
+        'BA':(41.12,16.87),'BG':(45.69,9.67),'BI':(45.56,8.05),
+        'BL':(46.14,12.22),'BN':(41.13,14.78),'BO':(44.49,11.34),
+        'BR':(40.63,17.94),'BS':(45.54,10.22),'BT':(41.23,16.29),
+        'BZ':(46.50,11.35),'CA':(39.22,9.11),'CB':(41.56,14.66),
+        'CE':(41.08,14.33),'CH':(42.35,14.17),'CL':(37.49,13.93),
+        'CN':(44.39,7.55),'CO':(45.81,9.08),'CR':(45.13,10.02),
+        'CS':(39.30,16.25),'CT':(37.50,15.09),'CZ':(38.90,16.59),
+        'EN':(37.56,14.28),'FC':(44.22,12.04),'FE':(44.83,11.62),
+        'FG':(41.46,15.55),'FI':(43.77,11.25),'FM':(43.16,13.72),
+        'FR':(41.64,13.35),'GE':(44.41,8.93),'GO':(45.94,13.62),
+        'GR':(42.76,11.11),'IM':(43.88,8.03),'IS':(41.59,14.23),
+        'KR':(39.08,17.12),'LC':(45.86,9.40),'LE':(40.35,18.17),
+        'LI':(43.55,10.31),'LO':(45.31,9.50),'LT':(41.46,12.90),
+        'LU':(43.84,10.50),'MB':(45.59,9.27),'MC':(43.30,13.45),
+        'ME':(38.19,15.55),'MI':(45.46,9.19),'MN':(45.16,10.79),
+        'MO':(44.65,10.93),'MS':(44.03,10.14),'MT':(40.66,16.60),
+        'NA':(40.85,14.27),'NO':(45.45,8.62),'NU':(40.32,9.33),
+        'OR':(39.90,8.59),'PA':(38.13,13.34),'PC':(44.99,9.66),
+        'PD':(45.41,11.88),'PE':(42.46,14.21),'PG':(43.11,12.39),
+        'PI':(43.72,10.40),'PN':(46.07,12.66),'PO':(43.88,11.10),
+        'PR':(44.80,10.33),'PT':(43.93,10.91),'PU':(43.62,12.71),
+        'PV':(45.18,9.16),'PZ':(40.64,15.80),'RA':(44.42,12.20),
+        'RC':(38.11,15.66),'RE':(44.70,10.64),'RG':(36.93,14.74),
+        'RI':(42.41,12.86),'RM':(41.89,12.51),'RN':(44.06,12.57),
+        'RO':(45.07,11.79),'SA':(40.68,14.76),'SI':(43.32,11.33),
+        'SO':(46.17,9.87),'SP':(44.10,9.82),'SR':(37.07,15.29),
+        'SS':(40.73,8.56),'SU':(39.33,9.00),'SV':(44.30,8.48),
+        'TA':(40.47,17.24),'TE':(42.66,13.70),'TN':(46.07,11.12),
+        'TO':(45.07,7.68),'TP':(37.87,12.53),'TR':(42.56,12.65),
+        'TS':(45.65,13.77),'TV':(45.67,12.24),'UD':(46.06,13.24),
+        'VA':(45.82,8.83),'VB':(45.93,8.55),'VC':(45.32,8.42),
+        'VE':(45.44,12.33),'VI':(45.55,11.54),'VR':(45.44,10.99),
+        'VS':(39.75,8.83),'VT':(42.42,12.10),'VV':(38.67,16.10),
+    }
+    result = []
+    for m in mercatini_q:
+        if m.lat and m.lon:
+            lat, lon = float(m.lat), float(m.lon)
+        elif m.provincia and m.provincia.upper() in PROV:
+            lat, lon = PROV[m.provincia.upper()]
+            # Piccolo jitter per non sovrapporre marker stessa prov
+            import random; random.seed(m.id)
+            lat += random.uniform(-0.05, 0.05)
+            lon += random.uniform(-0.05, 0.05)
+        else:
+            continue
+        result.append({
+            'id': m.id,
+            'titolo': m.titolo,
+            'citta': m.citta,
+            'prov': m.provincia or '',
+            'd_ini': m.data_inizio.strftime('%d/%m/%Y'),
+            'd_fin': m.data_fine.strftime('%d/%m/%Y') if m.data_fine != m.data_inizio else '',
+            'lat': round(lat, 5),
+            'lon': round(lon, 5),
+            'url': url_for('mercatini.dettaglio', id=m.id),
+        })
+    return _json(result)
 
 
 # ------------------------------------------------------------------
