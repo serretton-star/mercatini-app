@@ -27,7 +27,7 @@
     <div style="flex:1;min-width:200px">
       <div style="font-weight:600;margin-bottom:4px">
         Foto #{{ seg.foto_id }} —
-        <a href="{{ url_for('artigiani.profilo', hobbista_id=seg.foto.account_id) }}"
+        <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=seg.foto.account_id) }}"
            target="_blank" style="color:var(--terra)">
           {{ seg.foto.account.nome_visualizzato }}
         </a>

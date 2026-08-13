@@ -45,7 +45,7 @@
       {% for h in hobbisti %}
       <tr style="border-bottom:1px solid var(--sand)">
         <td style="padding:10px 12px;font-weight:500">
-          <a href="{{ url_for('artigiani.profilo', hobbista_id=h.id) }}"
+          <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=h.id) }}"
              target="_blank" style="color:var(--ink);text-decoration:none">
             {{ h.nome_visualizzato }}
           </a>

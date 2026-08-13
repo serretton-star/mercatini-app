@@ -42,7 +42,7 @@
       {%- endif %}
       <div class="photo-row">
         {%- for item in queue_items[:3] %}
-        <a href="https://mercatini.blog{{ url_for('artigiani.profilo', hobbista_id=hobbista.id) }}">
+        <a href="https://mercatini.blog{{ url_for('artigiani.profilo_redirect', hobbista_id=hobbista.id) }}">
           <img src="https://mercatini.blog{{ item.foto.thumb_url }}"
                alt="{{ item.foto.didascalia or hobbista.nome_visualizzato }}"
                style="width:90px;height:90px;object-fit:cover;border-radius:8px">
@@ -52,7 +52,7 @@
       {%- if queue_items|length > 3 %}
       <p class="card-sub">+ {{ queue_items|length - 3 }} altre foto</p>
       {%- endif %}
-      <a href="https://mercatini.blog{{ url_for('artigiani.profilo', hobbista_id=hobbista.id) }}"
+      <a href="https://mercatini.blog{{ url_for('artigiani.profilo_redirect', hobbista_id=hobbista.id) }}"
          style="display:inline-block;margin-top:8px;color:#C0522A;font-size:.82rem;font-weight:600;text-decoration:none">
         Vedi il profilo →
       </a>

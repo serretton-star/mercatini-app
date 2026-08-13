@@ -57,7 +57,7 @@
       <br>Visita il suo profilo per scoprire le sue creazioni.
     </p>
 
-    <a class="btn" href="https://mercatini.blog{{ url_for('artigiani.profilo', hobbista_id=hobbista.id) }}">
+    <a class="btn" href="https://mercatini.blog{{ url_for('artigiani.profilo_redirect', hobbista_id=hobbista.id) }}">
       Vedi il profilo di {{ hobbista.nome_visualizzato }} →
     </a>
 

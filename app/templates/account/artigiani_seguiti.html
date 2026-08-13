@@ -24,7 +24,7 @@
       <div class="w-16 h-16 rounded-xl bg-warm flex items-center justify-center text-2xl flex-shrink-0">✦</div>
       {% endif %}
       <div class="flex-1 min-w-0">
-        <a href="{{ url_for('artigiani.profilo', hobbista_id=follow.hobbista.id) }}"
+        <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=follow.hobbista.id) }}"
            class="font-semibold text-secondary hover:text-primary truncate block">{{ follow.hobbista.nome_visualizzato }}</a>
         {% if follow.hobbista.comune %}
         <p class="text-xs text-gray-400">📍 {{ follow.hobbista.comune }}</p>

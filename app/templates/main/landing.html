@@ -463,7 +463,7 @@ footer{background:var(--ink);border-top:1px solid rgba(255,255,255,.06);padding:
       <div class="mc-art-nome">{{ primo_artigiano.nome_visualizzato }}</div>
       <div class="mc-art-spec">{{ primo_artigiano.specialita or primo_artigiano.bio or 'Artigiano hobbista' }}</div>
       <div class="mc-art-footer">
-        <a href="{{ url_for('artigiani.profilo', hobbista_id=primo_artigiano.id) }}"
+        <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=primo_artigiano.id) }}"
            style="font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:var(--terra);text-decoration:none;font-weight:500">Scopri →</a>
         <a href="{{ url_for('artigiani.elenco') }}"
            style="font-family:var(--mono);font-size:.55rem;color:rgba(120,100,80,.5);text-decoration:none">Tutti gli artigiani →</a>

@@ -297,7 +297,7 @@
     </div>
     <div class="art-strip">
       {% for h in hobbisti_attivi %}
-      <a href="{{ url_for('artigiani.profilo', hobbista_id=h.id) }}" class="art-mini-card">
+      <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=h.id) }}" class="art-mini-card">
         {% if h.foto_di_copertina %}
         <img src="{{ h.foto_di_copertina.thumb_url }}" alt="{{ h.nome_visualizzato }}"
              class="art-mini-photo" loading="lazy">
