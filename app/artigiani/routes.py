@@ -5,10 +5,12 @@ VETRINA SOLO: nessun acquisto, carrello o pagamento tra utenti.
 """
 import json
 import logging
+import os
 from datetime import datetime, timezone
 
 from flask import (render_template, redirect, url_for, flash,
-                   request, session, jsonify, current_app, abort)
+                   request, session, jsonify, current_app, abort,
+                   send_from_directory)
 from flask_login import current_user, login_required
 
 from app import db
@@ -84,6 +86,22 @@ def profilo(hobbista_id):
 def termini():
     """Pagina termini di servizio hobbisti."""
     return render_template('artigiani/termini.html')
+
+
+# ── Serve foto tramite slug ────────────────────────────────────────────────────
+
+@artigiani.route('/foto/<slug>/<path:filename>')
+def serve_foto(slug, filename):
+    """
+    Serve una foto (o thumbnail) tramite slug artigiano.
+    URL: /artigiani/foto/<slug>/<file>.jpg
+         /artigiani/foto/<slug>/thumb/<file>.jpg
+    I file risiedono fisicamente in ARTIGIANI_UPLOAD_FOLDER/<account_id>/...
+    """
+    hobbista = HobbistaAccount.query.filter_by(slug=slug).first_or_404()
+    upload_base = current_app.config['ARTIGIANI_UPLOAD_FOLDER']
+    account_dir = os.path.join(upload_base, str(hobbista.id))
+    return send_from_directory(account_dir, filename)
 
 
 # Segnalazione pubblica foto (POST)

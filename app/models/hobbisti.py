@@ -4,8 +4,18 @@ Modelli per la sezione Artigiani Hobbisti di mercatini.blog.
 VETRINA SOLO — nessun flusso di acquisto/pagamento tra utenti.
 """
 import enum
+import re
+import unicodedata
 from datetime import datetime, timezone
 from app import db
+
+
+def _slugify(text: str) -> str:
+    """Converte testo in slug URL-safe (es. 'Selin Ar' -> 'selin-ar')."""
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    text = re.sub(r'[^\w\s-]', '', text).strip().lower()
+    return re.sub(r'[-\s]+', '-', text) or 'artigiano'
 
 
 class StatoHobbista(enum.Enum):
@@ -43,6 +53,7 @@ class HobbistaAccount(db.Model):
 
     id                   = db.Column(db.Integer, primary_key=True)
     nome_visualizzato    = db.Column(db.String(100), nullable=False)
+    slug                 = db.Column(db.String(120), nullable=True, unique=True, index=True)
     email                = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash        = db.Column(db.String(255), nullable=True)   # nullable: OAuth
     google_id            = db.Column(db.String(100), nullable=True, unique=True)
@@ -115,6 +126,22 @@ class HobbistaAccount(db.Model):
             (a for a in self.abbonamenti if a.stato == StatoAbbonamento.attivo), None
         )
 
+    def genera_slug_unico(self):
+        """Genera uno slug unico basato su nome_visualizzato e lo assegna a self.slug."""
+        base = _slugify(self.nome_visualizzato) or f'artigiano-{self.id}'
+        slug = base
+        counter = 1
+        while True:
+            existing = HobbistaAccount.query.filter(
+                HobbistaAccount.slug == slug,
+                HobbistaAccount.id != self.id,
+            ).first()
+            if not existing:
+                break
+            slug = f'{base}-{counter}'
+            counter += 1
+        self.slug = slug
+
 
 # ── Foto ─────────────────────────────────────────────────────────────────────
 
@@ -144,12 +171,17 @@ class HobbistaFoto(db.Model):
 
     @property
     def url(self):
+        slug = self.account.slug if self.account else None
+        if slug:
+            return f"/artigiani/foto/{slug}/{self.filename}"
         return f"/static/{self.path_relativo}"
 
     @property
     def thumb_url(self):
-        # path_relativo: uploads/artigiani/<id>/<file>.jpg
-        # thumb:         uploads/artigiani/<id>/thumb/<file>.jpg
+        slug = self.account.slug if self.account else None
+        if slug:
+            return f"/artigiani/foto/{slug}/thumb/{self.filename}"
+        # fallback: path_relativo e.g. uploads/artigiani/<id>/<file>.jpg
         parts = self.path_relativo.rsplit('/', 1)
         if len(parts) == 2:
             return f"/static/{parts[0]}/thumb/{parts[1]}"

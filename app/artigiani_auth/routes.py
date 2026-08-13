@@ -92,6 +92,9 @@ def registrati():
             email_verificata     = False,
         )
         db.session.add(hobbista)
+        db.session.flush()          # ottieni hobbista.id prima del commit
+
+        hobbista.genera_slug_unico()   # assegna slug unico basato su nome
         db.session.commit()
 
         token      = _serializer().dumps(email, salt=SALT_VERIFY)
