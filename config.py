@@ -36,6 +36,7 @@ class Config:
     # Stripe
     STRIPE_SECRET_KEY      = os.environ.get('STRIPE_SECRET_KEY', '')
     STRIPE_WEBHOOK_SECRET  = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+    STRIPE_WEBHOOK_SECRET_HOBBISTI = os.environ.get('STRIPE_WEBHOOK_SECRET_HOBBISTI', '')
     STRIPE_PRICE_1M  = os.environ.get('STRIPE_PRICE_1M', '')
     STRIPE_PRICE_3M  = os.environ.get('STRIPE_PRICE_3M', '')
     STRIPE_PRICE_6M  = os.environ.get('STRIPE_PRICE_6M', '')
@@ -61,5 +62,3 @@ config = {
     'production': ProductionConfig,
     'default': DevelopmentConfig,
 }
-
-# test deploy 08/13/2026 10:41:51

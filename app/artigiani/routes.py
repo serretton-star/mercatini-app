@@ -220,6 +220,13 @@ def elimina_foto(foto_id):
     if foto.account_id != hobbista.id:
         abort(403)
 
+    # Elimina dipendenze prima della foto:
+    # HobbistaFotoDigestQueue.foto_id è NOT NULL → SQLAlchemy non può SET NULL → IntegrityError
+    from app.models.follow import HobbistaFotoDigestQueue
+    HobbistaFotoDigestQueue.query.filter_by(foto_id=foto.id).delete()
+    # HobbistaSegnalazione.foto_id è NOT NULL → stessa logica
+    HobbistaSegnalazione.query.filter_by(foto_id=foto.id).delete()
+
     elimina_foto_files(foto)
     db.session.delete(foto)
     db.session.commit()
