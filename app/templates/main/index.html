@@ -71,15 +71,11 @@
   text-decoration: none; color: inherit;
   transition: border-color .2s, box-shadow .2s;
 }
-.event-card:hover {
-  border-color: var(--sand);
-  box-shadow: 0 4px 20px rgba(0,0,0,.06);
-}
+.event-card:hover { border-color: var(--sand); box-shadow: 0 4px 20px rgba(0,0,0,.06); }
 .event-datebox {
   width: 42px; height: 42px; flex-shrink: 0;
   background: var(--ink2); border-radius: 9px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 .event-datebox .day {
   font-family: 'Fraunces', serif; font-weight: 900;
@@ -94,81 +90,75 @@
 .event-card-title {
   font-family: 'Fraunces', serif; font-weight: 700;
   font-size: .9rem; color: var(--ink); line-height: 1.2;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;
 }
-.event-card-loc {
-  font-size: .7rem; color: var(--warm);
-  display: flex; align-items: center; gap: 4px;
-}
+.event-card-loc { font-size: .7rem; color: var(--warm); display: flex; align-items: center; gap: 4px; }
 .event-card-loc svg { flex-shrink: 0; }
 .event-badge {
   font-family: 'DM Mono', monospace; font-size: .52rem;
   letter-spacing: .08em; text-transform: uppercase;
   padding: 4px 10px; border-radius: 100px; flex-shrink: 0;
 }
-.event-badge.in-corso  { background: #D1FAE5; color: #065F46; }
-.event-badge.prossimo  { background: var(--paper2); color: var(--warm); }
-.event-badge.gratuito  { background: #D1FAE5; color: #065F46; }
-.event-badge.price     { color: var(--warm); }
+.event-badge.in-corso { background: #D1FAE5; color: #065F46; }
+.event-badge.gratuito { background: #D1FAE5; color: #065F46; }
+.event-badge.price    { color: var(--warm); }
 
 /* ── CTA ── */
-.home-cta {
-  background: var(--ink2); border-radius: 14px;
-  padding: 28px 24px; text-align: center;
-}
-.home-cta h3 {
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1.2rem; color: #fff; margin-bottom: 8px;
-}
-.home-cta p {
-  font-size: .8rem; color: rgba(255,255,255,.38);
-  line-height: 1.7; margin-bottom: 20px; max-width: 280px; margin-inline: auto;
-}
+.home-cta { background: var(--ink2); border-radius: 14px; padding: 28px 24px; text-align: center; }
+.home-cta h3 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.2rem; color: #fff; margin-bottom: 8px; }
+.home-cta p  { font-size: .8rem; color: rgba(255,255,255,.38); line-height: 1.7; margin-bottom: 20px; max-width: 280px; margin-inline: auto; }
 
-/* ── ARTIGIANI CARDS ── */
+/* ── ARTIGIANI CAROSELLO ── */
 .art-strip {
-  display: flex; gap: 12px;
+  display: flex; gap: 14px;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
-  padding-bottom: 8px;
-  scrollbar-width: none;
+  padding-bottom: 10px; scrollbar-width: none;
 }
 .art-strip::-webkit-scrollbar { display: none; }
-.art-mini-card {
-  flex: 0 0 140px; scroll-snap-align: start;
+
+.art-card {
+  flex: 0 0 180px; scroll-snap-align: start;
   background: #fff; border: 1px solid var(--paper2);
-  border-radius: 12px; overflow: hidden;
+  border-radius: 14px; overflow: hidden;
   text-decoration: none; color: inherit;
   transition: border-color .2s, box-shadow .2s;
   display: flex; flex-direction: column;
 }
-.art-mini-card:hover {
-  border-color: var(--sand);
-  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+.art-card:hover { border-color: var(--sand); box-shadow: 0 6px 22px rgba(0,0,0,.08); }
+
+.art-card-img-wrap {
+  position: relative; width: 100%; height: 150px;
+  background: var(--paper2); flex-shrink: 0;
 }
-.art-mini-photo {
-  width: 100%; height: 110px;
-  object-fit: cover; background: var(--paper2);
-  display: block;
+.art-card-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
+.art-card-cover-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; background: var(--paper2);
 }
-.art-mini-photo-placeholder {
-  width: 100%; height: 110px;
-  background: var(--paper2);
-  display: flex; align-items: center; justify-content: center;
+.art-card-avatar {
+  position: absolute; bottom: -18px; left: 12px;
+  width: 36px; height: 36px; border-radius: 9px;
+  border: 2px solid #fff; background: var(--sand);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.art-mini-body {
-  padding: 9px 10px;
-}
-.art-mini-nome {
+.art-card-body { padding: 26px 12px 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.art-card-nome {
   font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: .78rem; color: var(--ink);
+  font-size: .88rem; color: var(--ink); line-height: 1.2;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 2px;
 }
-.art-mini-spec {
-  font-size: .62rem; color: var(--warm);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.art-card-spec { font-size: .62rem; color: var(--warm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.art-card-tag {
+  display: inline-block; font-family: 'DM Mono', monospace; font-size: .52rem;
+  letter-spacing: .06em; background: var(--paper2); color: var(--warm);
+  border-radius: 100px; padding: 3px 8px; margin-right: 3px; margin-top: 2px;
+}
+.art-card-footer {
+  margin-top: auto; padding-top: 8px;
+  display: flex; justify-content: flex-end;
+  font-family: 'DM Mono', monospace; font-size: .56rem;
+  letter-spacing: .06em; color: var(--terra);
 }
 </style>
 {% endblock %}
@@ -212,74 +202,7 @@
     </div>
   </div>
 
-  <!-- IN CORSO -->
-  {% if in_corso %}
-  <section>
-    <div class="section-label">
-      <span class="dot-live"></span>
-      In corso
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      {% for m in in_corso %}
-      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}" class="event-card">
-        <div class="event-datebox">
-          <span class="day">{{ m.data_inizio.strftime('%d') }}</span>
-          <span class="mon">{{ m.data_inizio.strftime('%b') }}</span>
-        </div>
-        <div class="event-card-body">
-          <div class="event-card-title">{{ m.titolo }}</div>
-          <div class="event-card-loc">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.686-7-11.5a7 7 0 1114 0C19 14.314 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
-            {{ m.citta }}, {{ m.regione }}
-          </div>
-        </div>
-        <span class="event-badge in-corso">
-          Fino al {{ m.data_fine.strftime('%d/%m') }}
-        </span>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- PROSSIMI EVENTI -->
-  {% if prossimi %}
-  <section>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="section-label" style="margin-bottom:0">Prossimi eventi</div>
-      <a href="{{ url_for('mercatini.index') }}"
-         style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--terra);text-decoration:none">
-        Vedi tutti
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      {% for m in prossimi %}
-      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}" class="event-card">
-        <div class="event-datebox">
-          <span class="day">{{ m.data_inizio.strftime('%d') }}</span>
-          <span class="mon">{{ m.data_inizio.strftime('%b') }}</span>
-        </div>
-        <div class="event-card-body">
-          <div class="event-card-title">{{ m.titolo }}</div>
-          <div class="event-card-loc">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.686-7-11.5a7 7 0 1114 0C19 14.314 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
-            {{ m.citta }}, {{ m.regione }}
-          </div>
-        </div>
-        {% if m.ingresso_gratuito %}
-          <span class="event-badge gratuito">Gratuito</span>
-        {% else %}
-          <span class="event-badge price">{{ m.prezzo_display }}</span>
-        {% endif %}
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-
-  <!-- ARTIGIANI IN VETRINA -->
+  <!-- ARTIGIANI IN VETRINA — in cima, prima dei mercati -->
   {% if hobbisti_attivi %}
   <section>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -297,36 +220,129 @@
     </div>
     <div class="art-strip">
       {% for h in hobbisti_attivi %}
-      <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=h.id) }}" class="art-mini-card">
-        {% if h.foto_di_copertina %}
-        <img src="{{ h.foto_di_copertina.thumb_url }}" alt="{{ h.nome_visualizzato }}"
-             class="art-mini-photo" loading="lazy">
-        {% else %}
-        <div class="art-mini-photo-placeholder">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="3"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <path d="M21 15l-5-5L5 21"/>
-          </svg>
+      <a href="{{ url_for('artigiani.profilo_redirect', hobbista_id=h.id) }}" class="art-card">
+        <div class="art-card-img-wrap">
+          {% if h.foto_di_copertina %}
+            <img src="{{ h.foto_di_copertina.thumb_url }}" alt="{{ h.nome_visualizzato }}"
+                 class="art-card-cover" loading="lazy">
+          {% else %}
+            <div class="art-card-cover-placeholder">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--sand)" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+            </div>
+          {% endif %}
+          <div class="art-card-avatar">
+            {% if h.foto_di_copertina %}
+              <img src="{{ h.foto_di_copertina.thumb_url }}" alt=""
+                   style="width:100%;height:100%;object-fit:cover">
+            {% else %}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2">
+                <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            {% endif %}
+          </div>
         </div>
-        {% endif %}
-        <div class="art-mini-body">
-          <div class="art-mini-nome">{{ h.nome_visualizzato }}</div>
-          <div class="art-mini-spec">{{ (h.specialita or h.bio or 'Artigiano') | truncate(28, True, '…') }}</div>
+        <div class="art-card-body">
+          <div class="art-card-nome">{{ h.nome_visualizzato }}</div>
+          <div class="art-card-spec">{{ (h.specialita or h.bio or 'Artigiano') | truncate(32, True, '…') }}</div>
+          {% if h.specialita %}
+            <div style="margin-top:3px">
+              <span class="art-card-tag">{{ h.specialita | truncate(20, True, '') }}</span>
+            </div>
+          {% endif %}
+          <div class="art-card-footer">Visita &rarr;</div>
         </div>
       </a>
       {% endfor %}
     </div>
-    <p style="font-size:.68rem;color:var(--sand);margin-top:10px;font-family:'DM Mono',monospace;letter-spacing:.05em">
+    <p style="font-size:.65rem;color:var(--sand);margin-top:10px;
+              font-family:'DM Mono',monospace;letter-spacing:.05em">
       Le creazioni sono opere di artigiani hobbisti. I contatti avvengono privatamente tra le parti.
     </p>
+  </section>
+  {% endif %}
+
+  <!-- IN CORSO -->
+  {% if in_corso %}
+  <section>
+    <div class="section-label">
+      <span class="dot-live"></span>
+      In corso
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      {% for m in in_corso %}
+      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}" class="event-card">
+        <div class="event-datebox">
+          <span class="day">{{ m.data_inizio.strftime('%d') }}</span>
+          <span class="mon">{{ m.data_inizio.strftime('%b') }}</span>
+        </div>
+        <div class="event-card-body">
+          <div class="event-card-title">{{ m.titolo }}</div>
+          <div class="event-card-loc">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 21s-7-6.686-7-11.5a7 7 0 1114 0C19 14.314 12 21 12 21z"/>
+              <circle cx="12" cy="9.5" r="2.5"/>
+            </svg>
+            {{ m.citta }}, {{ m.regione }}
+          </div>
+        </div>
+        <span class="event-badge in-corso">Fino al {{ m.data_fine.strftime('%d/%m') }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- PROSSIMI EVENTI -->
+  {% if prossimi %}
+  <section>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="section-label" style="margin-bottom:0">Prossimi eventi</div>
+      <a href="{{ url_for('mercatini.index') }}"
+         style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;
+                text-transform:uppercase;color:var(--terra);text-decoration:none">
+        Vedi tutti
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             style="display:inline;vertical-align:middle"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      {% for m in prossimi %}
+      <a href="{{ url_for('mercatini.dettaglio', id=m.id) }}" class="event-card">
+        <div class="event-datebox">
+          <span class="day">{{ m.data_inizio.strftime('%d') }}</span>
+          <span class="mon">{{ m.data_inizio.strftime('%b') }}</span>
+        </div>
+        <div class="event-card-body">
+          <div class="event-card-title">{{ m.titolo }}</div>
+          <div class="event-card-loc">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 21s-7-6.686-7-11.5a7 7 0 1114 0C19 14.314 12 21 12 21z"/>
+              <circle cx="12" cy="9.5" r="2.5"/>
+            </svg>
+            {{ m.citta }}, {{ m.regione }}
+          </div>
+        </div>
+        {% if m.ingresso_gratuito %}
+          <span class="event-badge gratuito">Gratuito</span>
+        {% else %}
+          <span class="event-badge price">{{ m.prezzo_display }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
   </section>
   {% endif %}
 
   <!-- EMPTY STATE -->
   {% if not in_corso and not prossimi %}
   <div style="text-align:center;padding:48px 0;color:var(--warm)">
-    <p style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:8px">Nessun mercatino ancora pubblicato.</p>
+    <p style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;
+              color:var(--ink);margin-bottom:8px">Nessun mercatino ancora pubblicato.</p>
     <p style="font-size:.82rem;margin-bottom:20px">Sii il primo ad aggiungere un mercatino nella tua zona.</p>
     <a href="{{ url_for('mercatini.nuovo') }}" class="btn-home-primary">+ Aggiungi mercatino</a>
   </div>
@@ -338,8 +354,12 @@
     <h3>Vuoi aggiungere i tuoi mercatini?</h3>
     <p>Registrati gratis per inserire eventi, ricevere notifiche nella tua provincia e usare l'assistente AI.</p>
     <div style="display:flex;flex-direction:column;gap:8px;max-width:260px;margin:0 auto">
-      <a href="{{ url_for('auth.register') }}" class="btn-home-primary" style="justify-content:center">Registrati gratis</a>
-      <a href="{{ url_for('auth.login') }}" class="btn-home-ghost" style="justify-content:center;border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.5)">Ho già un account</a>
+      <a href="{{ url_for('auth.register') }}" class="btn-home-primary"
+         style="justify-content:center">Registrati gratis</a>
+      <a href="{{ url_for('auth.login') }}" class="btn-home-ghost"
+         style="justify-content:center;border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.5)">
+        Ho gia un account
+      </a>
     </div>
   </div>
   {% endif %}
@@ -360,16 +380,21 @@
 
 </div>
 
-<!-- PWA Scripts (invariati) -->
-<div id="toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:50;background:var(--ink);color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.06em;padding:10px 20px;border-radius:100px;box-shadow:0 4px 20px rgba(0,0,0,.2)"></div>
+<div id="toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+     z-index:50;background:var(--ink);color:#fff;font-family:'DM Mono',monospace;font-size:.7rem;
+     letter-spacing:.06em;padding:10px 20px;border-radius:100px;box-shadow:0 4px 20px rgba(0,0,0,.2)"></div>
 
 {% block scripts %}
-<div id="install-modal" style="display:none;position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;padding:16px">
+<div id="install-modal" style="display:none;position:fixed;inset:0;z-index:50;display:none;
+     align-items:flex-end;justify-content:center;padding:16px">
   <div style="position:absolute;inset:0;background:rgba(0,0,0,.4)" onclick="chiudiModale()"></div>
-  <div style="position:relative;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:24px;width:100%;max-width:380px;z-index:10">
-    <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:12px" id="modal-titolo">Installa l'app</h3>
+  <div style="position:relative;background:#fff;border-radius:16px;
+       box-shadow:0 20px 60px rgba(0,0,0,.2);padding:24px;width:100%;max-width:380px;z-index:10">
+    <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;
+               color:var(--ink);margin-bottom:12px" id="modal-titolo">Installa l'app</h3>
     <div id="modal-corpo" style="font-size:.82rem;color:var(--warm);line-height:1.7"></div>
-    <button onclick="chiudiModale()" class="btn-home-primary" style="width:100%;justify-content:center;margin-top:16px">Ho capito</button>
+    <button onclick="chiudiModale()" class="btn-home-primary"
+            style="width:100%;justify-content:center;margin-top:16px">Ho capito</button>
   </div>
 </div>
 
@@ -380,22 +405,31 @@ window.addEventListener('appinstalled', function() { _deferredPrompt = null; sho
 
 function installaApp() {
   var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  var isAndroid = /android/i.test(navigator.userAgent);
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (isStandalone) { showToast('App gia installata!'); return; }
   if (_deferredPrompt) {
     _deferredPrompt.prompt();
-    _deferredPrompt.userChoice.then(function(r) { if (r.outcome === 'accepted') showToast('Installazione avviata!'); _deferredPrompt = null; });
+    _deferredPrompt.userChoice.then(function(r) {
+      if (r.outcome === 'accepted') showToast('Installazione avviata!');
+      _deferredPrompt = null;
+    });
     return;
   }
   var modal = document.getElementById('install-modal');
   modal.style.display = 'flex';
   if (isIos) {
     document.getElementById('modal-titolo').textContent = 'Installa su iPhone/iPad';
-    document.getElementById('modal-corpo').innerHTML = '<ol style="list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Tocca <strong>Condividi</strong> in basso</li><li>Scegli <strong>"Aggiungi a schermata Home"</strong></li><li>Tocca <strong>Aggiungi</strong></li></ol>';
+    document.getElementById('modal-corpo').innerHTML =
+      '<ol style="list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:6px">' +
+      '<li>Tocca <strong>Condividi</strong> in basso</li>' +
+      '<li>Scegli <strong>"Aggiungi a schermata Home"</strong></li>' +
+      '<li>Tocca <strong>Aggiungi</strong></li></ol>';
   } else {
     document.getElementById('modal-titolo').textContent = "Installa l'app";
-    document.getElementById('modal-corpo').innerHTML = '<ol style="list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Tocca menu <strong>&#8942;</strong> in alto a destra</li><li>Scegli <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li></ol>';
+    document.getElementById('modal-corpo').innerHTML =
+      '<ol style="list-style:decimal;padding-left:18px;display:flex;flex-direction:column;gap:6px">' +
+      '<li>Tocca menu <strong>&#8942;</strong> in alto a destra</li>' +
+      '<li>Scegli <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li></ol>';
   }
 }
 
@@ -403,13 +437,19 @@ function chiudiModale() { document.getElementById('install-modal').style.display
 
 function condividi() {
   var url = window.location.href.split('?')[0];
-  if (navigator.share) { navigator.share({title:'mercatini.blog',url:url}).catch(function(){_copy(url)}); }
+  if (navigator.share) { navigator.share({title:'mercatini.blog', url:url}).catch(function(){_copy(url)}); }
   else { _copy(url); }
 }
 
 function _copy(url) {
-  if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){showToast('Link copiato!')}); }
-  else { var i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();document.execCommand('copy');document.body.removeChild(i);showToast('Link copiato!'); }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function(){showToast('Link copiato!')});
+  } else {
+    var i = document.createElement('input'); i.value = url;
+    document.body.appendChild(i); i.select();
+    document.execCommand('copy'); document.body.removeChild(i);
+    showToast('Link copiato!');
+  }
 }
 
 function showToast(msg) {
