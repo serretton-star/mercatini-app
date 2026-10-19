@@ -99,6 +99,10 @@ def create_app(config_name=None):
     from app.commands import register_commands
     register_commands(app)
 
+    # Crawler CLI commands
+    from app.crawler.run import registra_comandi as registra_crawler
+    registra_crawler(app)
+
     # Scheduler APScheduler (avvia in produzione)
     import os as _os
     if _os.environ.get('FLASK_ENV') == 'production':
