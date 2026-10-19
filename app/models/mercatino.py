@@ -2,6 +2,15 @@ from datetime import datetime, timezone
 from slugify import slugify
 from app import db
 
+# Valori validi per il campo ricorrenza
+RICORRENZA_SCELTE = [
+    ('nessuna',      'Evento singolo'),
+    ('settimanale',  'Ogni settimana'),
+    ('bisettimanale','Ogni due settimane'),
+    ('mensile',      'Ogni mese'),
+]
+RICORRENZA_LABEL = dict(RICORRENZA_SCELTE)
+
 
 mercatino_categorie = db.Table(
     'mercatino_categorie',
@@ -44,6 +53,9 @@ class Mercatino(db.Model):
     ingresso_gratuito = db.Column(db.Boolean, nullable=False, default=True)
     prezzo_ingresso   = db.Column(db.Numeric(6, 2), nullable=True)
     numero_espositori = db.Column(db.Integer, nullable=True)
+    ricorrenza           = db.Column(db.String(20), nullable=False,
+                                      default='nessuna', server_default='nessuna')
+    data_fine_ricorrenza = db.Column(db.Date, nullable=True)
     pubblicato   = db.Column(db.Boolean, nullable=False, default=False, index=True)
     fonte_crawler = db.Column(db.String(500), nullable=True)
     created_at   = db.Column(db.DateTime(timezone=True), nullable=False,
@@ -55,6 +67,14 @@ class Mercatino(db.Model):
     organizzatore = db.relationship('User', backref=db.backref('mercatini', lazy='dynamic'))
     categorie = db.relationship('Categoria', secondary=mercatino_categorie,
                                 backref=db.backref('mercatini', lazy='dynamic'), lazy='subquery')
+
+    @property
+    def is_ricorrente(self):
+        return (self.ricorrenza or 'nessuna') != 'nessuna'
+
+    @property
+    def ricorrenza_label(self):
+        return RICORRENZA_LABEL.get(self.ricorrenza or 'nessuna', 'Evento singolo')
 
     @property
     def is_futuro(self):

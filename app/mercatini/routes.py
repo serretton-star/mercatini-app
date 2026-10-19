@@ -1,12 +1,13 @@
 from datetime import date
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
-from sqlalchemy import or_
+from sqlalchemy import or_, func as _sqlfunc
 from app import db, csrf
 from app.auth.routes import notifica_nuovi_eventi
 from app.models import Mercatino, Categoria
 from app.mercatini import mercatini
 from app.mercatini.forms import MercatinoForm
+from app.models.mercatino import RICORRENZA_SCELTE
 
 
 # ------------------------------------------------------------------
@@ -133,6 +134,26 @@ def index():
     if cat_id:
         query = query.join(Mercatino.categorie).filter(Categoria.id == cat_id)
 
+    # ----------------------------------------------------------------
+    # Deduplicazione eventi ricorrenti: per ogni (titolo, città, organizzatore)
+    # mostra solo la prima occorrenza attiva/futura (MIN id).
+    # Risolve il problema dei mercatini settimanali inseriti come righe separate.
+    # ----------------------------------------------------------------
+    dedup_sq = (
+        db.session.query(_sqlfunc.min(Mercatino.id).label('repr_id'))
+        .filter(
+            Mercatino.pubblicato == True,
+            Mercatino.data_fine >= oggi,
+        )
+        .group_by(
+            _sqlfunc.lower(Mercatino.titolo),
+            _sqlfunc.lower(db.func.coalesce(Mercatino.citta, '')),
+            Mercatino.organizzatore_id,
+        )
+        .subquery('dedup_sq')
+    )
+    query = query.join(dedup_sq, Mercatino.id == dedup_sq.c.repr_id)
+
     distanze = {}
     if user_lat and user_lon:
         # Filtra e ordina per distanza (fetch all, poi pagina in Python)
@@ -238,6 +259,8 @@ def nuovo():
             email_contatto=form.email_contatto.data or None,
             ingresso_gratuito=True,
             numero_espositori=form.numero_espositori.data or None,
+            ricorrenza=form.ricorrenza.data or 'nessuna',
+            data_fine_ricorrenza=form.data_fine_ricorrenza.data or None,
             pubblicato=not form.pubblicato.data,
             organizzatore_id=current_user.id,
         )
@@ -288,6 +311,8 @@ def modifica(id):
         m.email_contatto = form.email_contatto.data or None
         m.ingresso_gratuito = True
         m.numero_espositori = form.numero_espositori.data or None
+        m.ricorrenza = form.ricorrenza.data or 'nessuna'
+        m.data_fine_ricorrenza = form.data_fine_ricorrenza.data or None
         m.pubblicato = not form.pubblicato.data
         if form.categorie.data:
             cats = Categoria.query.filter(Categoria.id.in_(form.categorie.data)).all()

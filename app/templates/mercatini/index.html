@@ -164,7 +164,12 @@
           📍 {{ m.citta }}{% if m.provincia %} ({{ m.provincia }}){% endif %}, {{ m.regione }}
         </p>
 
-        {% if m.data_fine and m.data_fine != m.data_inizio %}
+        {% if m.is_ricorrente %}
+        <p class="text-xs text-gray-400 mt-0.5">
+          🔁 {{ m.ricorrenza_label }}
+          {% if m.data_fine_ricorrenza %} · fino al {{ m.data_fine_ricorrenza.strftime('%d/%m/%Y') }}{% endif %}
+        </p>
+        {% elif m.data_fine and m.data_fine != m.data_inizio %}
         <p class="text-xs text-gray-400 mt-0.5">
           {{ m.data_inizio.strftime('%d/%m') }} – {{ m.data_fine.strftime('%d/%m/%Y') }}
         </p>

@@ -2,12 +2,13 @@ from datetime import date
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, TextAreaField, DateField, BooleanField,
-    DecimalField, IntegerField, SelectMultipleField, widgets
+    DecimalField, IntegerField, SelectMultipleField, SelectField, widgets
 )
 from wtforms.validators import (
     DataRequired, Length, Optional, URL, NumberRange,
     ValidationError, Email
 )
+from app.models.mercatino import RICORRENZA_SCELTE
 
 
 class MultiCheckboxField(SelectMultipleField):
@@ -74,6 +75,17 @@ class MercatinoForm(FlaskForm):
         'Categorie',
         coerce=int,
         validators=[Optional()]
+    )
+    ricorrenza = SelectField(
+        'Ricorrenza',
+        choices=RICORRENZA_SCELTE,
+        default='nessuna',
+        validators=[Optional()]
+    )
+    data_fine_ricorrenza = DateField(
+        'Fine serie (ultima data)',
+        validators=[Optional()],
+        render_kw={'placeholder': 'gg/mm/aaaa'}
     )
     pubblicato = BooleanField('Salva come bozza')
 

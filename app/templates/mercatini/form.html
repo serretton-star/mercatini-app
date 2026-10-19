@@ -135,6 +135,20 @@
       </div>
     </div>
 
+    <!-- Ricorrenza -->
+    <div class="border-t border-gray-100 pt-4 space-y-3">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ricorrenza</p>
+      <div>
+        <label class="block text-sm font-medium text-secondary mb-1">{{ form.ricorrenza.label.text }}</label>
+        {{ form.ricorrenza(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30', id='sel-ricorrenza', onchange='toggleRicorrenza()') }}
+      </div>
+      <div id="campo-fine-ricorrenza" class="{% if not (mercatino is defined and mercatino.is_ricorrente) %}hidden{% endif %}">
+        <label class="block text-sm font-medium text-secondary mb-1">{{ form.data_fine_ricorrenza.label.text }}</label>
+        {{ form.data_fine_ricorrenza(class='w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30', type='date') }}
+        <p class="text-xs text-gray-400 mt-1">L'ultima data in cui questo mercatino si tiene (es. 31/12/2026).</p>
+      </div>
+    </div>
+
     <!-- Categorie -->
     {% if form.categorie.choices %}
     <div class="border-t border-gray-100 pt-4">
@@ -528,5 +542,15 @@ function submitAnyway(){
   _forceSubmit = true;
   document.querySelector('form').submit();
 }
+
+function toggleRicorrenza(){
+  const sel = document.getElementById('sel-ricorrenza');
+  const campo = document.getElementById('campo-fine-ricorrenza');
+  if(sel && campo){
+    campo.classList.toggle('hidden', sel.value === 'nessuna');
+  }
+}
+// Esegui all'avvio per eventuali form di modifica già pre-popolati
+document.addEventListener('DOMContentLoaded', toggleRicorrenza);
 </script>
 {% endblock %}
